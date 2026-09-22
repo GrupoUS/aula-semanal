@@ -32,7 +32,7 @@ const MIN_RETRY_MS = 1500;
  * de detectar "colei o script novo mas esqueci de publicar Nova versão" — sem
  * isso o sintoma é silencioso: campo vazio no painel, e ninguém percebe.
  */
-export const EXPECTED_STORE_VERSION = 3;
+export const EXPECTED_STORE_VERSION = 4;
 
 export type LeadStoreErrorCode =
 	| "lead_store_not_configured"

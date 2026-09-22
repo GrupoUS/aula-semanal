@@ -76,3 +76,30 @@ testados, e nenhum contato real foi enviado. Destinos/IDs/credenciais preservado
 Correções locais prontas e verificadas. Publicação foi solicitada ao usuário como
 aprovação separada e ainda não executada no momento deste registro. Sem commit/push.
 A alteração anterior em `docs/aula-semanal-implementacao.md` foi preservada.
+
+
+## Publicação autorizada e conferida
+
+O usuário aprovou explicitamente publicar as correções usando as configurações
+atuais e sem alterar credenciais. Executado em 22/09/2026:
+
+```bash
+vercel deploy --prod --project aula-semanal --scope suporte-8670s-projects --yes
+```
+
+Exit 0; deploy `dpl_4HfygZwgf8mSgtbwy1T2grxh6ArU`, status READY:
+https://aula-semanal-nj1en4yix-suporte-8670s-projects.vercel.app
+
+Publicação disponível em https://aula-semanal.vercel.app e no alias que já estava
+configurado na Vercel, https://aula.gpus.com.br. Nenhum domínio foi criado ou
+reconfigurado por esta execução. O canonical permanece no domínio vercel.app
+aprovado para esta correção.
+
+Conferência pós-publicação: home, termos, privacidade, robots e sitemap HTTP 200;
+canonical/sitemap apontam ao projeto correto; nove assets da home HTTP 200;
+assets originais do Figma presentes. Formulário aponta a `/api/inscricao` no próprio
+domínio. Payload vazio retorna 400 invalid_payload sem persistência.
+
+`/admin` retorna 200, mas o alerta de login não configurado permanece. Credenciais
+não foram alteradas; a publicação não é prova de funcionamento da planilha nem
+de login autenticado. Nenhuma inscrição real foi criada. Sem commit ou push.

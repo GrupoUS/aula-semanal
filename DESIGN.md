@@ -20,7 +20,7 @@ Formulário compacto com campos claros, cantos suaves, texto escuro e CTA dourad
 Labels acessíveis, estados legíveis e consentimento têm precedência sobre a
 omissão desses elementos no mock. Campos opcionais devem ser identificados.
 
-Abaixo do hero: faixa tipográfica, seção clara com três cards e bloco de autoridade
+Abaixo do hero: seção clara com três cards e bloco de autoridade
 solo. Espaçamento generoso, hierarquia por tamanho e contraste, sem decoração de
 painel ou grade coletiva de professores. Rodapé discreto com privacidade e termos.
 

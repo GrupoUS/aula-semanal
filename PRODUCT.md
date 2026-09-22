@@ -13,7 +13,7 @@ acesso não foram confirmados e não devem ser inventados.
 ## Conteúdo e conversão
 
 Fonte única: `src/content/products/aula-semanal.json`, na collection `products`.
-Estrutura: hero com formulário e retrato; faixa de recorrência; três temas;
+Estrutura: hero com formulário e retrato; três temas;
 autoridade solo da Sacha; CTA e rodapé legal.
 
 CTA principal: “Quero garantir minha vaga”, para `#inscricao`.
