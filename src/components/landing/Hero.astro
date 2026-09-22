@@ -1,7 +1,9 @@
 ---
-import { Picture } from "astro:assets";
+import { getImage } from "astro:assets";
 import type { CollectionEntry } from "astro:content";
-import sacha from "../../assets/sacha/sacha-joy.jpg";
+import desktopArtwork from "../../assets/na-mesa/hero-desktop.png";
+import mobileArtwork from "../../assets/na-mesa/hero-mobile.png";
+import MesaMark from "../shared/MesaMark.astro";
 import RegistrationForm from "./RegistrationForm.astro";
 
 type Product = CollectionEntry<"products">["data"];
@@ -9,35 +11,25 @@ interface Props {
 	hero: Product["hero"];
 	event: Product["event"];
 	registration: Product["registration"];
+	brand: Product["shell"]["brand"];
 }
-const { hero, event, registration } = Astro.props;
+const { hero, event, registration, brand } = Astro.props;
+const [desktop, mobile] = await Promise.all([
+	getImage({ src: desktopArtwork, width: 1920, format: "webp", quality: 85 }),
+	getImage({ src: mobileArtwork, format: "webp", quality: 90 }),
+]);
 ---
 
 <section class="mesa-hero" aria-labelledby="hero-title">
-	<svg class="mesa-hero-lines" viewBox="0 0 1440 1100" preserveAspectRatio="none" fill="none" aria-hidden="true">
-		<path d="M1010 -140C800 370 440 760-180 710" />
-		<path d="M1510 -60C1120 380 1320 1060 510 1150" />
-		<path d="M-130 990C390 1250 1120 1130 1510 900" />
-	</svg>
+	<picture class="mesa-hero-picture">
+		<source media="(max-width: 767px)" srcset={mobile.src} width={mobileArtwork.width} height={mobileArtwork.height} />
+		<img src={desktop.src} alt={hero.portraitAlt} width={desktopArtwork.width} height={desktopArtwork.height} class="mesa-hero-image" loading="eager" fetchpriority="high" />
+	</picture>
 	<div class="mesa-container mesa-hero-grid">
+		<MesaMark brand={brand} class="mesa-hero-mark" />
 		<div class="mesa-hero-intro">
 			<h1 id="hero-title">{hero.headline} <span>{hero.highlight}</span></h1>
-			<p class="mesa-hero-summary">{hero.subheadline}</p>
-		</div>
-		<div class="mesa-hero-portrait">
-			<Picture
-				src={sacha}
-				alt={hero.portraitAlt}
-				class="mesa-hero-image"
-				formats={["avif", "webp"]}
-				fallbackFormat="jpeg"
-				widths={[480, 720, 960, 1280]}
-				sizes="(min-width: 1024px) 55vw, (min-width: 640px) 42vw, 180px"
-				quality={80}
-				loading="eager"
-				fetchpriority="high"
-				pictureAttributes={{ class: "mesa-hero-picture" }}
-			/>
+			<p class="mesa-hero-summary">{hero.subheadline.split("**").map((text, index) => index % 2 ? <strong>{text}</strong> : text)}</p>
 		</div>
 		<RegistrationForm registration={registration} event={event} class="mesa-hero-form" />
 	</div>

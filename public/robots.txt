@@ -4,4 +4,4 @@ Disallow: /404
 Disallow: /admin
 Disallow: /api
 
-Sitemap: https://aulaotb.gpus.com.br/sitemap-index.xml
+Sitemap: https://aula-semanal.vercel.app/sitemap-index.xml

@@ -1,26 +1,36 @@
 ---
+import { Image } from "astro:assets";
 import type { CollectionEntry } from "astro:content";
+import authorityIcon from "../../assets/na-mesa/icon-authority.png";
+import pricingIcon from "../../assets/na-mesa/icon-pricing.png";
+import salesIcon from "../../assets/na-mesa/icon-sales.png";
+import Button from "../shared/Button.astro";
 
 interface Props {
 	learn: CollectionEntry<"products">["data"]["learn"];
+	finalCta: CollectionEntry<"products">["data"]["finalCta"];
 }
-const { learn } = Astro.props;
+const { learn, finalCta } = Astro.props;
+const icons = [pricingIcon, authorityIcon, salesIcon];
 ---
 
 <section id="aula" class="mesa-learn" aria-labelledby="learn-title">
 	<div class="mesa-container">
 		<div class="mesa-section-intro">
-			<h2 id="learn-title">{learn.headline}</h2>
-			<p class="mesa-section-summary">{learn.subheadline}</p>
+			<h2 id="learn-title">{learn.headline.split("**").map((text, index) => index % 2 ? <strong>{text}</strong> : text)}</h2>
 		</div>
 		<div class="mesa-topics">
 			{learn.topics.map((topic, index) => (
-				<article class="mesa-topic">
-					<span class="mesa-topic-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-					<h3 class="mesa-topic-title">{topic.titulo}</h3>
-					<p class="mesa-topic-body">{topic.descricao}</p>
+				<article class="mesa-topic" aria-label={topic.titulo}>
+					<span class="mesa-topic-icon" aria-hidden="true">
+						<Image src={icons[index]} alt="" class="mesa-topic-icon-image" width={28} format="webp" quality={100} loading="lazy" />
+					</span>
+					<p class="mesa-topic-body">{topic.descricao.split("**").map((text, part) => part % 2 ? <strong>{text}</strong> : text)}</p>
 				</article>
 			))}
+		</div>
+		<div class="mesa-learn-cta">
+			<Button href={finalCta.primaryHref} class="mesa-button mesa-button-navy" size="md">{finalCta.primaryLabel}</Button>
 		</div>
 	</div>
 </section>

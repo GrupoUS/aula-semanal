@@ -16,8 +16,8 @@
 	"hero": {
 		"headline": "Aulas ao vivo gratuitas.",
 		"highlight": "Toda terça-feira no Zoom.",
-		"subheadline": "Toda semana, uma conversa sobre as decisões que fazem diferença na sua carreira. Agenda, captação, posicionamento e vendas para profissionais de Saúde Estética e HOF.",
-		"portraitAlt": "Dra. Sacha Gualberto sorrindo.",
+		"subheadline": "Toda semana, ao vivo, você **tem acesso a aulas exclusivas para profissionais de Saúde Estética e HOF:** agenda, captação, posicionamento e vendas. Você vê o raciocínio por trás das decisões que separam profissionais comuns de **referência na área.**",
+		"portraitAlt": "Dra. Sacha Gualberto, de blazer branco.",
 		"primaryCta": {
 			"label": "Quero garantir minha vaga",
 			"href": "#inscricao"
@@ -27,27 +27,21 @@
 			"message": "Olá, Laura! Quero participar do Na Mesa com Sacha, as aulas gratuitas de terça-feira."
 		}
 	},
-	"ticker": [
-		"Saúde Estética & HOF",
-		"Toda terça-feira",
-		"Ao vivo no Zoom",
-		"Participação gratuita"
-	],
+	"ticker": ["Aulas gratuitas ao vivo", "Toda terça-feira no Zoom"],
 	"learn": {
-		"headline": "Nessas aulas você vai entender:",
-		"subheadline": "Um encontro por semana para olhar além da técnica — e pensar o seu trabalho como negócio.",
+		"headline": "Nessas aulas **você vai entender:**",
 		"topics": [
 			{
-				"titulo": "Agenda & captação",
-				"descricao": "Como organizar sua rotina e pensar caminhos para atrair os pacientes certos para o seu trabalho."
+				"titulo": "Agenda e negócio",
+				"descricao": "Como precificar, organizar sua agenda e **construir um negócio saudável** para a sua carreira e a sua vida."
 			},
 			{
-				"titulo": "Posicionamento & valor",
-				"descricao": "Como comunicar o que você faz, construir presença e tornar clara a sua proposta de valor."
+				"titulo": "Autoridade e posicionamento",
+				"descricao": "Como **construir autoridade** e fazer quem te segue desejar fechar com você, mesmo que ainda não tenha muitos seguidores e esteja iniciando na área."
 			},
 			{
-				"titulo": "Vendas & negócio",
-				"descricao": "Como conduzir conversas comerciais e tomar decisões com mais clareza sobre o seu negócio."
+				"titulo": "Comunicação e vendas",
+				"descricao": "Como **estruturar sua comunicação e seu processo comercial** para construir e aproveitar todas as oportunidades."
 			}
 		]
 	},
@@ -73,13 +67,13 @@
 			{
 				"nome": "Dra. Sacha Gualberto",
 				"area": "CEO do Grupo US",
-				"bio": "À frente do Grupo US, Sacha reúne sua experiência em educação e empreendedorismo para conversar sobre os desafios de quem atua na Saúde Estética. No Na Mesa, compartilha raciocínios e decisões sobre agenda, captação, posicionamento e vendas.",
+				"bio": "À frente do **Grupo US**, Sacha reúne sua experiência em educação e empreendedorismo para conversar sobre os desafios de quem atua na Saúde Estética.\n\nNo Na Mesa, compartilha raciocínios e decisões sobre **agenda, captação, posicionamento e vendas.**\n\nUma conversa direta sobre carreira e negócio, para olhar além da técnica e pensar os próximos passos do seu trabalho.",
 				"foto": "speaker-sacha"
 			}
 		]
 	},
 	"registration": {
-		"headline": "Preencha seus dados para participar.",
+		"headline": "**Preencha seus dados** para participar:",
 		"subheadline": "É gratuito. Seu próximo encontro começa aqui.",
 		"submitLabel": "Quero garantir minha vaga",
 		"sendingLabel": "Enviando sua inscrição...",
@@ -105,13 +99,13 @@
 		"privacyHref": "/politica-de-privacidade",
 		"fields": {
 			"nameLabel": "Nome completo",
-			"namePlaceholder": "Seu nome completo",
+			"namePlaceholder": "Nome completo *",
 			"phoneLabel": "Telefone / WhatsApp",
-			"phonePlaceholder": "(00) 00000-0000",
+			"phonePlaceholder": "Telefone / WhatsApp *",
 			"emailLabel": "E-mail",
-			"emailPlaceholder": "seu@email.com",
+			"emailPlaceholder": "E-mail *",
 			"experienceLabel": "Tempo de atuação na Saúde Estética (opcional)",
-			"experiencePlaceholder": "Há quanto tempo você atua?",
+			"experiencePlaceholder": "Tempo na estética (opcional)",
 			"experiencePayloadLabel": "Tempo de atuação",
 			"experienceOptions": [
 				"Até 1 ano",
@@ -120,7 +114,7 @@
 				"Mais de 5 anos"
 			],
 			"revenueLabel": "Faixa de faturamento mensal (opcional)",
-			"revenuePlaceholder": "Selecione uma faixa",
+			"revenuePlaceholder": "Faturamento mensal (opcional)",
 			"revenuePayloadLabel": "Faturamento mensal",
 			"revenueOptions": [
 				"Até R$ 5 mil",
@@ -148,7 +142,7 @@
 	"finalCta": {
 		"headline": "Seu lugar à mesa está aqui.",
 		"subheadline": "Toda terça-feira. Ao vivo no Zoom. Gratuitamente.",
-		"primaryLabel": "Quero garantir minha vaga",
+		"primaryLabel": "Quero minha vaga gratuita",
 		"primaryHref": "#inscricao",
 		"whatsapp": {
 			"label": "Falar com a Laura",

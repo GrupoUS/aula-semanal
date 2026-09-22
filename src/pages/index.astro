@@ -26,13 +26,13 @@ const personSchema = {
 	jsonLd={personSchema}
 	legalDisclaimer={d.legal.disclaimer}
 >
-	<Hero hero={d.hero} event={d.event} registration={d.registration} />
-	<div class="mesa-ticker">
-		<ul class="mesa-container" role="list">
-			{d.ticker.map((item) => <li>{item}</li>)}
+	<Hero hero={d.hero} event={d.event} registration={d.registration} brand={d.shell.brand} />
+	<div class="mesa-ticker" aria-hidden="true">
+		<ul role="list">
+			{Array.from({ length: 8 }, () => d.ticker).flat().map((item) => <li class="mesa-ticker-item">{item}</li>)}
 		</ul>
 	</div>
-	<Learn learn={d.learn} />
+	<Learn learn={d.learn} finalCta={d.finalCta} />
 	<Faculty faculty={d.faculty} finalCta={d.finalCta} />
 	<MobileCTABar
 		slot="bottom-cta"

@@ -53,12 +53,9 @@ const {
 	legalDisclaimer,
 } = Astro.props;
 
-// Domínio de produção (Vercel): aulaotb.gpus.com.br. Astro.site vem de astro.config.mjs.
-const FALLBACK_SITE = "https://aulaotb.gpus.com.br";
-const site = Astro.site?.toString().replace(/\/$/, "") ?? FALLBACK_SITE;
-const pageUrl =
-	canonical ??
-	new URL(Astro.url.pathname, Astro.site ?? FALLBACK_SITE).toString();
+if (!Astro.site) throw new Error("Configure site in astro.config.mjs");
+const site = Astro.site.toString().replace(/\/$/, "");
+const pageUrl = canonical ?? new URL(Astro.url.pathname, Astro.site).toString();
 const absoluteOgImage = ogImage.startsWith("http")
 	? ogImage
 	: `${site}${ogImage}`;
@@ -193,6 +190,7 @@ const jsonLdPayload = [
 
 		{/* Astro Fonts API — Sora (LCP / display) preloaded; Inter swap-only. */}
 		<Font cssVariable="--font-sora" />
+		<Font cssVariable="--font-abhaya" preload />
 		<Font cssVariable="--font-inter" preload />
 
 		<meta property="og:type" content="website" />

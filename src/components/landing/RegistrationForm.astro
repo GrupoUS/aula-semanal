@@ -33,7 +33,7 @@ const talkUrl = ss?.talkWhatsapp
 	: null;
 
 const inputClass = "mesa-form-input";
-const labelClass = "mesa-form-label";
+const labelClass = "sr-only";
 const errorClass = "mesa-field-error mt-1 hidden text-sm text-error";
 ---
 
@@ -58,10 +58,10 @@ const errorClass = "mesa-field-error mt-1 hidden text-sm text-error";
 			data-experience-label={f.experiencePayloadLabel}
 			data-revenue-label={f.revenuePayloadLabel}
 		>
-			<div class="space-y-4">
+			<div class="mesa-form-fields">
 				<header>
 					<h2 class="mesa-form-heading">
-						{r.headline}
+						{r.headline.split("**").map((text, index) => index % 2 ? <strong>{text}</strong> : text)}
 					</h2>
 					<p class="mesa-form-note">{r.requiredNote}</p>
 				</header>
@@ -163,7 +163,7 @@ const errorClass = "mesa-field-error mt-1 hidden text-sm text-error";
 					type="submit"
 					data-cro="form_submit_click"
 					data-conversion-zone
-					class="btn-base btn-primary mesa-button w-full rounded-lg min-h-12 px-6 text-base"
+					class="btn-base btn-primary mesa-button w-full rounded-lg px-4"
 				>
 					{r.submitLabel}
 				</button>

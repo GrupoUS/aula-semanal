@@ -432,7 +432,7 @@ const products = defineCollection({
 				whatsappMessage,
 			}),
 		}),
-		ticker: z.array(z.string()).min(3),
+		ticker: z.array(z.string()).min(2),
 		legal: z.object({
 			disclaimer: z.string().min(40),
 			terms: legalPage,

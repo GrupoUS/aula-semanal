@@ -7,7 +7,7 @@
     "purpose": "Landing de inscrição para aulas semanais gratuitas com Dra. Sacha Gualberto, toda terça-feira no Zoom. Profissionais de Saúde Estética e HOF.",
     "stack": "astro-static-tailwindv4",
     "stagingUrl": "http://localhost:4321",
-    "productionUrl": "https://aulaotb.gpus.com.br",
+    "productionUrl": "https://aula-semanal.vercel.app",
     "locale": "pt-BR"
   },
   "git": {

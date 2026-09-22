@@ -43,7 +43,7 @@ O hook de instalação do Lefthook não pôde instalar hooks por ausência de Gi
 
 `bun run verify:vercel`: exit 1, bloqueado porque `git ls-files` exige repositório.
 Nenhum Git foi inicializado e nenhum upload, commit, push ou deploy foi feito.
-Demais gates e inspeção visual serão registrados após concluir a implementação.
+Os demais gates e a inspeção visual estão registrados abaixo.
 
 ## Evidência da implementação local
 
@@ -86,3 +86,34 @@ novos de marca; teste de estados; documentação e identidade de projeto/package
 Não há histórico Git nesta pasta. Um rollback integral exige restaurar a cópia
 original do projeto, preservando dados/arquivos externos; não há commit para
 reverter. Assets originais permanecem no disco. Não houve commit, push ou deploy.
+
+## Fechamento dos gates
+
+- `bun run check:geometry http://127.0.0.1:4334/`: exit 0,
+  **GEOMETRIA OK — 102 asserções**. Três viewports, consentimento pendente/aceito,
+  reduced motion, foco/teclado e navegação sem JavaScript. Log: `geometry.log` no
+  diretório de evidências. A rodada no dev não é usada como PASS.
+- `bun run lighthouse:audit http://127.0.0.1:4334`: exit 1, **advisory**.
+  Home: performance 96, acessibilidade 100, boas práticas 77, SEO 100.
+  Termos e privacidade: 97/100/77/100. São os resultados do script existente,
+  que usa o melhor valor por categoria entre três tentativas.
+- Causa confirmada de boas práticas 77: audits `third-party-cookies` e
+  `inspector-issues`, por cookies Meta via GTM herdado. Em perfil temporário,
+  sem interação, o probe capturou uma tentativa de PageView com consentimento
+  ainda ausente. O probe impediu o envio. A reprodução usou o user agent do
+  Lighthouse; a primeira tentativa headless padrão expirou. Isto não prova
+  comportamento em produção. Revisar o container/consentimento antes de publicar,
+  em escopo próprio; tracking e IDs não foram modificados.
+- Revisão independente do formulário: nenhum achado relevante no escopo de
+  qualificadores, consentimento, persistência e PII. Backend herdado não auditado.
+- Legais/404: um h1, identidade nova e sem overflow no mobile. 404 com noindex.
+  Login administrativo inspecionado visualmente, sem autenticação ou dados reais;
+  variáveis de login não estão configuradas neste ambiente.
+
+Evidências adicionais: `.graph-powers/logs/weekly/lighthouse-best-practices.json`
+(querystrings mascaradas) e `lighthouse-consent-probe.json` no mesmo diretório.
+
+Resultado: implementação local e gates funcionais concluídos. Não é liberação de
+produção: upload não verificável sem Git; domínio e integrações continuam com
+pendências explícitas. Integração real com planilha, login autenticado e deploy
+não foram executados. Sem nova dependência, commit, push ou publicação.

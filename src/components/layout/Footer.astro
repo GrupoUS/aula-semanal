@@ -1,7 +1,5 @@
 ---
 import type { CollectionEntry } from "astro:content";
-import { whatsappUrlWithText } from "../../lib/whatsapp";
-import MesaMark from "../shared/MesaMark.astro";
 
 type Product = CollectionEntry<"products">["data"];
 interface Props {
@@ -10,26 +8,15 @@ interface Props {
 	whatsappMessage: string;
 	disclaimer?: string;
 }
-const { shell, legal, whatsappMessage, disclaimer } = Astro.props;
+const { shell, legal, disclaimer } = Astro.props;
 const currentYear = new Date().getFullYear();
 ---
 
 <footer class="mesa-footer">
 	<div class="mesa-container">
-		<div class="mesa-footer-top">
-			<div>
-				<a href="/" aria-label={shell.brand.homeLabel}><MesaMark brand={shell.brand} /></a>
-				<p class="mesa-footer-description">{shell.footerDescription}</p>
-			</div>
-			<nav aria-label={shell.navigationLabel} class="mesa-footer-links">
-				{shell.navigation.map((link) => <a href={link.href}>{link.label}</a>)}
-				<a href={whatsappUrlWithText(whatsappMessage)} target="_blank" rel="noopener noreferrer">{shell.contactLabel}</a>
-				<a href="https://instagram.com/drasachagualberto" target="_blank" rel="noopener noreferrer">{shell.instagramLabel}</a>
-			</nav>
-		</div>
 		{disclaimer && <p class="mesa-footer-disclaimer">{disclaimer}</p>}
 		<div class="mesa-footer-bottom">
-			<p>© {currentYear} {shell.copyright}</p>
+			<p class="mesa-copyright">© {currentYear} {shell.copyright}</p>
 			<div class="mesa-footer-legal">
 				<a href="/termos">{legal.terms.title}</a>
 				<a href="/politica-de-privacidade">{legal.privacy.title}</a>

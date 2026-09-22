@@ -1,8 +1,9 @@
 # Na Mesa com Sacha — direção visual
 
-Referência principal: print fornecido pelo usuário. O Figma compartilhado exige
-login; medidas e frame mobile não foram inspecionados. Esta direção pertence à
-aula semanal e substitui o sistema visual herdado nesta pasta.
+Referência principal: Figma inspecionado após login em 22/09/2026. Frames originais
+Desktop 1080 × 1682 e Mobile 390 × 2409 exportados em `docs/figma/`. Assets originais
+em `src/assets/na-mesa/`. Esta direção substitui a aproximação inicial e o sistema
+visual herdado nesta pasta.
 
 ## Composição
 
@@ -11,9 +12,9 @@ retrato real da Sacha em escala grande. Texto e formulário à esquerda no deskt
 retrato à direita, sem invadir controles. Lockup tipográfico “NA MESA” acompanhado
 de “com Sacha Gualberto”. Não usar monograma de outro produto.
 
-Título serifado branco com trecho em dourado claro. Corrigir a repetição “ao vivo”
-do mock. Corpo e controles em sans-serif. Usar as fontes disponíveis; não adicionar
-dependência para tipografia. Todos os valores técnicos vivem no `@theme` do CSS.
+Título em Abhaya Libre 800, branco com trecho dourado. Corrigir a repetição “ao vivo”
+do mock. Corpo Inter leve com ênfases 700; fontes carregadas pelo provider Astro
+existente, sem nova dependência. Todos os valores técnicos vivem no `@theme` do CSS.
 
 Formulário compacto com campos claros, cantos suaves, texto escuro e CTA dourado.
 Labels acessíveis, estados legíveis e consentimento têm precedência sobre a
@@ -36,8 +37,9 @@ leitores de tela em faixas decorativas.
 
 ## Assets e critérios
 
-Reutilizar retratos locais reais. Não afirmar que o JPEG existente é o recorte exato
-do Figma. Imagens com dimensões explícitas; prioridade alta apenas no retrato LCP.
+Usar os retratos, fundos, logo e ícones exportados do arquivo Figma, preservando
+texto e controles em HTML. No mobile, retrato grande acima do título e fade da foto
+de autoridade para o texto. Imagens com dimensões explícitas e otimização Astro.
 OG e favicon devem expressar a identidade desta série, sem marca antiga.
 
 Verificar hero desktop/mobile, contraste, foco, navegação, formulário, estados e

@@ -1,5 +1,7 @@
 ---
+import { Image } from "astro:assets";
 import type { CollectionEntry } from "astro:content";
+import logo from "../../assets/na-mesa/logo.png";
 
 interface Props {
 	brand: CollectionEntry<"products">["data"]["shell"]["brand"];
@@ -9,6 +11,5 @@ const { brand, class: className } = Astro.props;
 ---
 
 <span class:list={["mesa-mark", className]}>
-	<span class="mesa-mark-name"><span>{brand.top}</span><strong>{brand.main}</strong></span>
-	<span class="mesa-mark-host"><em>{brand.connector}</em> {brand.host}</span>
+	<Image src={logo} alt={brand.name} class="mesa-mark-image" width={184} height={25} format="webp" quality={100} loading="eager" />
 </span>

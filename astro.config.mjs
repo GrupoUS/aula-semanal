@@ -8,9 +8,16 @@ import { defineConfig, fontProviders } from "astro/config";
 
 // https://astro.build/config
 export default defineConfig({
-	site: "https://aulaotb.gpus.com.br",
+	site: "https://aula-semanal.vercel.app",
 
 	fonts: [
+		{
+			name: "Abhaya Libre",
+			cssVariable: "--font-abhaya",
+			provider: fontProviders.google(),
+			weights: [400, 800],
+			styles: ["normal"],
+		},
 		{
 			// Face de título do canon OTB. 800 é o peso de display: Sora é uma
 			// grotesca geométrica e precisa do peso alto + tracking negativo
@@ -25,7 +32,7 @@ export default defineConfig({
 			name: "Inter",
 			cssVariable: "--font-inter",
 			provider: fontProviders.google(),
-			weights: [300, 400, 500, 600, 700],
+			weights: [200, 300, 400, 500, 600, 700],
 			styles: ["normal"],
 		},
 	],

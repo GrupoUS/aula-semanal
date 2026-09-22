@@ -12,9 +12,9 @@ const isHome = Astro.url.pathname === "/";
 
 <header id="site-header" class:list={["mesa-header", isHome && "mesa-header-home"]}>
 	<div class="mesa-container mesa-header-inner">
-		<a href="/" aria-label={shell.brand.homeLabel} class="mesa-home-link">
+		{!isHome && <a href="/" aria-label={shell.brand.homeLabel} class="mesa-home-link">
 			<MesaMark brand={shell.brand} />
-		</a>
+		</a>}
 		<nav aria-label={shell.navigationLabel} class="mesa-nav">
 			{shell.navigation.map((link) => <a href={link.href}>{link.label}</a>)}
 		</nav>
