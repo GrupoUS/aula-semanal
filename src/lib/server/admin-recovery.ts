@@ -8,7 +8,10 @@ export const RECOVERY_EMAIL = "suporte@drasacha.com.br";
 const TOKEN_PATTERN = /^[a-f0-9]{64}$/;
 const stateSchema = z.object({
 	version: z.literal(1),
-	passwordHash: z.string().regex(/^pbkdf2-sha256\$600000\$[a-f0-9]{32}\$[a-f0-9]{64}$/).nullable(),
+	passwordHash: z
+		.string()
+		.regex(/^pbkdf2-sha256\$600000\$[a-f0-9]{32}\$[a-f0-9]{64}$/)
+		.nullable(),
 	revision: z.string().min(1).max(100),
 });
 
@@ -28,7 +31,11 @@ function recoveryOrigin(): string | null {
 }
 
 export function isRecoveryConfigured(): boolean {
-	return isRecoveryEnabled() && getLeadStoreConfigStatus().configured && recoveryOrigin() !== null;
+	return (
+		isRecoveryEnabled() &&
+		getLeadStoreConfigStatus().configured &&
+		recoveryOrigin() !== null
+	);
 }
 
 export async function getAdminCredentialState(username: string, login = false) {
@@ -46,11 +53,22 @@ export async function requestAdminRecovery(): Promise<boolean> {
 	return z.object({ sent: z.literal(true) }).safeParse(result).success;
 }
 
-export async function resetAdminPassword(token: string, password: string): Promise<boolean> {
+export async function resetAdminPassword(
+	token: string,
+	password: string,
+): Promise<boolean> {
 	if (!isRecoveryConfigured() || !TOKEN_PATTERN.test(token)) return false;
 	if (password.length < 12 || password.length > 128) return false;
+	const tokenHash = await sha256Hex(token);
+	const validation = await callSheets("adminReset", {
+		tokenHash,
+		validateOnly: true,
+	});
+	if (!z.object({ valid: z.literal(true) }).safeParse(validation).success) {
+		return false;
+	}
 	const result = await callSheets("adminReset", {
-		tokenHash: await sha256Hex(token),
+		tokenHash,
 		passwordHash: await hashAdminPassword(password),
 	});
 	return z.object({ reset: z.literal(true) }).safeParse(result).success;

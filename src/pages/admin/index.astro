@@ -24,7 +24,9 @@ const errorMessage =
 		? "Usuário ou senha inválidos."
 		: errorCode === "config"
 			? "Sessão não configurada. Avise o administrador."
-			: null;
+			: errorCode === "unavailable"
+				? "Não foi possível entrar agora. Aguarde um minuto e tente novamente."
+				: null;
 ---
 
 <AdminLayout title="Painel · Login">
@@ -58,6 +60,11 @@ const errorMessage =
 				</div>
 			)
 		}
+		{Astro.url.searchParams.get("status") === "reset" && (
+			<p role="status" class="mt-6 rounded-xl border border-gold/40 bg-navy-light p-4 text-sm text-text-primary">
+				Senha atualizada. Entre com a nova senha. As sessões anteriores foram encerradas.
+			</p>
+		)}
 
 		<form
 			method="post"
@@ -74,6 +81,8 @@ const errorMessage =
 					type="text"
 					autocomplete="username"
 					required
+					aria-required="true"
+					maxlength="64"
 					class="mt-1 block min-h-12 w-full rounded-xl border border-navy-lighter bg-navy px-4 py-3 text-text-primary outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy"
 				/>
 			</div>
@@ -88,6 +97,8 @@ const errorMessage =
 					type="password"
 					autocomplete="current-password"
 					required
+					aria-required="true"
+					maxlength="128"
 					class="mt-1 block min-h-12 w-full rounded-xl border border-navy-lighter bg-navy px-4 py-3 text-text-primary outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy"
 				/>
 			</div>
@@ -99,5 +110,8 @@ const errorMessage =
 				Entrar
 			</button>
 		</form>
+		<a href="/admin/recuperar" class="mt-4 inline-flex min-h-12 items-center rounded-md text-sm text-gold underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy">
+			Esqueci a senha
+		</a>
 	</div>
 </AdminLayout>

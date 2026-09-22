@@ -2,7 +2,9 @@ const encoder = new TextEncoder();
 const PASSWORD_HASH = /^pbkdf2-sha256\$600000\$[a-f0-9]{32}\$[a-f0-9]{64}$/;
 
 export function bytesToHex(bytes: Uint8Array): string {
-	return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+	return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join(
+		"",
+	);
 }
 
 export function timingSafeEqual(a: string, b: string): boolean {
@@ -54,5 +56,8 @@ export async function verifyAdminPassword(
 		return timingSafeEqual(await sha256Hex(password), hash);
 	}
 	if (!isPasswordHash(hash)) return false;
-	return timingSafeEqual(await hashAdminPassword(password, hash.split("$")[2]), hash);
+	return timingSafeEqual(
+		await hashAdminPassword(password, hash.split("$")[2]),
+		hash,
+	);
 }

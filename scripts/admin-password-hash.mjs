@@ -1,14 +1,14 @@
-#!/usr/bin/env node
-// Gera o SHA-256 hex de uma senha para o campo passwordSha256 de ADMIN_USERS.
-// Uso: node scripts/admin-password-hash.mjs "<senha>"
-import { createHash } from "node:crypto";
+#!/usr/bin/env bun
+// Lê a senha de stdin (sem argumento/histórico) e gera passwordHash PBKDF2.
+import { readFileSync } from "node:fs";
+import { hashAdminPassword } from "../src/lib/server/admin-password.ts";
 
-const password = process.argv[2];
-if (!password) {
-	console.error('Uso: node scripts/admin-password-hash.mjs "<senha>"');
+const password = readFileSync(0, "utf8").replace(/\r?\n$/, "");
+if (password.length < 12 || password.length > 128) {
+	console.error(
+		"Forneça uma senha de 12 a 128 caracteres pela entrada padrão.",
+	);
 	process.exit(1);
 }
 
-process.stdout.write(
-	`${createHash("sha256").update(password).digest("hex")}\n`,
-);
+process.stdout.write(`${await hashAdminPassword(password)}\n`);

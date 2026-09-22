@@ -1,4 +1,6 @@
 /**
+ * @OnlyCurrentDoc
+ *
  * Aula OTB — store de leads em Google Sheets (Apps Script Web App).
  *
  * Runbook completo: docs/planilha-leads.md
@@ -22,7 +24,8 @@ const TZ = "America/Sao_Paulo";
 // versão" — sem isso o sintoma é silencioso: campo vazio no painel.
 // v3: toLead_ devolve fonte/midia/campanha, guarda de conflito por coluna,
 //     migrarDryRun.
-const API_VERSION = 3;
+// v4: recuperação do COMERCIAL em ScriptProperties, sem alterar a planilha.
+const API_VERSION = 4;
 const SECRET_PROP = "SHARED_SECRET";
 const LOCK_MS = 20000;
 
@@ -82,6 +85,17 @@ function configurar() {
   PropertiesService.getScriptProperties().setProperty(SECRET_PROP, secret);
   sheet_();
   Logger.log("SHEETS_SHARED_SECRET = " + secret);
+}
+
+/** Setup de uma instalação nova: idempotente, sem segredo em logs ou e-mail. */
+function configurarAulaSemanal() {
+  const props = PropertiesService.getScriptProperties();
+  if (!props.getProperty(SECRET_PROP)) {
+    props.setProperty(SECRET_PROP, (Utilities.getUuid() + Utilities.getUuid()).replace(/-/g, ""));
+  }
+  sheet_();
+  MailApp.getRemainingDailyQuota();
+  Logger.log("Instalação configurada. Consulte SHARED_SECRET nas propriedades do script.");
 }
 
 /**
@@ -196,7 +210,7 @@ function migrarInterno_(simulacao) {
   for (let i = 0; i < data.length; i++) {
     const lead = toLead_(data[i]);
     const src = source_(lead.utm, lead.referrer);
-    derived.push([src.fonte, src.midia, src.campanha]);
+    derived.push([src.fonte, src.midia, src.campanha].map(sheetCell_));
   }
   sh.getRange(2, C.fonte + 1, derived.length, 3)
     .setNumberFormat("@")
@@ -318,6 +332,14 @@ function handle_(body) {
   if (!body || !secretOk_(body.secret)) return { ok: false, error: "unauthorized" };
   const action = String(body.action || "");
   const p = body.payload || {};
+  if (["adminAuth", "adminResetRequest", "adminReset"].indexOf(action) >= 0) {
+    try {
+      return { ok: true, action: action, data: adminAction_(action, p) };
+    } catch (_err) {
+      // Nunca devolver erros do MailApp, senha, link ou token para logs/clientes.
+      return { ok: false, error: "admin_unavailable" };
+    }
+  }
   switch (action) {
     case "ping":
       return { ok: true, action: action, data: ping_() };
@@ -342,6 +364,106 @@ function handle_(body) {
     default:
       return { ok: false, error: "bad_action" };
   }
+}
+
+/* -------------------------- autenticação do painel ------------------------- */
+
+/** Solicita autorização script.send_mail sem enviar mensagem nem mudar dados. */
+function autorizarRecuperacao() {
+  MailApp.getRemainingDailyQuota();
+}
+
+// Propriedades próprias da série; nenhuma credencial entra na aba de leads.
+const ADMIN_PROP = "NA_MESA_ADMIN_";
+const ADMIN_RECOVERY_EMAIL = "suporte@drasacha.com.br";
+const ADMIN_RECOVERY_USER = "COMERCIAL";
+
+function adminRateLimit_(props, key, limit, windowMs) {
+  const now = Date.now();
+  const stored = JSON.parse(props.getProperty(ADMIN_PROP + key) || "null");
+  const state = stored && now - stored.startedAt < windowMs
+    ? stored : { startedAt: now, count: 0 };
+  if (state.count >= limit) throw new Error("admin_rate_limited");
+  state.count++;
+  props.setProperty(ADMIN_PROP + key, JSON.stringify(state));
+}
+
+function adminAction_(action, payload) {
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(5000)) throw new Error("locked");
+  try {
+    const props = PropertiesService.getScriptProperties();
+    if (action === "adminAuth") {
+      if (!/^[A-Za-z0-9._-]{1,64}$/.test(payload.username || "")) {
+        throw new Error("invalid_user");
+      }
+      if (payload.login === true) adminRateLimit_(props, "LOGIN", 20, 60000);
+      const saved = JSON.parse(props.getProperty(ADMIN_PROP + "USER_" + payload.username) || "null");
+      return {
+        version: 1,
+        passwordHash: saved ? saved.passwordHash : null,
+        revision: saved ? saved.revision : "bootstrap",
+      };
+    }
+
+    const key = ADMIN_PROP + "USER_" + ADMIN_RECOVERY_USER;
+    const previous = props.getProperty(key);
+    const state = JSON.parse(previous || "null") || { passwordHash: null, revision: "bootstrap" };
+    if (!/^[a-f0-9]{64}$/.test(payload.tokenHash || "")) throw new Error("invalid_token");
+
+    if (action === "adminResetRequest") {
+      // Origem vem de ADMIN_APP_ORIGIN no servidor; não vem do Host/requisição.
+      if (!/^https:\/\/[^\s/?#@]+\/admin\/recuperar#token=[a-f0-9]{64}$/.test(payload.resetUrl || "")) {
+        throw new Error("invalid_url");
+      }
+      if (state.sentAt && Date.now() - state.sentAt < 60000) throw new Error("admin_rate_limited");
+      adminRateLimit_(props, "MAIL", 3, 60 * 60000);
+      if (MailApp.getRemainingDailyQuota() < 1) throw new Error("mail_unavailable");
+      state.reset = { digest: payload.tokenHash, expiresAt: Date.now() + 15 * 60000 };
+      state.sentAt = Date.now();
+      props.setProperty(key, JSON.stringify(state));
+      try {
+        MailApp.sendEmail({
+          to: ADMIN_RECOVERY_EMAIL,
+          subject: "Na Mesa com Sacha — redefinir senha do painel",
+          body: "Foi solicitada a redefinição da senha do usuário COMERCIAL.\n\n" +
+            "Abra o link abaixo em até 15 minutos. Ele só pode ser usado uma vez.\n\n" +
+            payload.resetUrl + "\n\nSe você não fez esta solicitação, ignore esta mensagem. A senha permanece a mesma.",
+          name: "Na Mesa com Sacha",
+        });
+      } catch (_err) {
+        if (previous) props.setProperty(key, previous);
+        else props.deleteProperty(key);
+        throw new Error("mail_unavailable");
+      }
+      return { sent: true };
+    }
+
+    if (payload.validateOnly === true) adminRateLimit_(props, "RESET", 10, 60000);
+    if (!state.reset || state.reset.expiresAt <= Date.now() ||
+        !adminEqual_(state.reset.digest, payload.tokenHash)) return { reset: false };
+    // Preflight antes de PBKDF2 no servidor. O consumo abaixo revalida sob lock.
+    if (payload.validateOnly === true) return { valid: true };
+    if (!/^pbkdf2-sha256\$600000\$[a-f0-9]{32}\$[a-f0-9]{64}$/.test(payload.passwordHash || "")) {
+      throw new Error("invalid_password_hash");
+    }
+    // Uma única gravação sob lock troca senha/revisão e consome o token.
+    props.setProperty(key, JSON.stringify({
+      passwordHash: payload.passwordHash,
+      revision: Utilities.getUuid(),
+      sentAt: state.sentAt,
+    }));
+    return { reset: true };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function adminEqual_(a, b) {
+  if (typeof a !== "string" || typeof b !== "string" || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
 }
 
 /** Comparação de tempo constante (espelha timingSafeEqual de src/lib/server/auth.ts). */
@@ -417,7 +539,14 @@ function writeRow_(sh, rowNumber, lead) {
   if (rowNumber > sh.getMaxRows()) sh.insertRowsAfter(sh.getMaxRows(), 200);
   sh.getRange(rowNumber, 1, 1, HEADERS.length)
     .setNumberFormat("@")
-    .setValues([toRow_(lead)]);
+    .setValues([toRow_(lead).map(sheetCell_)]);
+}
+
+// Formato "@" não bloqueia fórmulas em setValues. O apóstrofo força texto.
+// CSV tem defesa independente em src/lib/leads/csv.ts para linhas antigas.
+function sheetCell_(value) {
+  return typeof value === "string" && /^[\s\p{Cc}\p{Cf}]*[=+\-@]/u.test(value)
+    ? "'" + value : value;
 }
 
 function toRow_(l) {

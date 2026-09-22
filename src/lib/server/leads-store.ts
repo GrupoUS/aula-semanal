@@ -71,7 +71,10 @@ type SheetsAction =
 	| "dashboard"
 	| "getLead"
 	| "setContacted"
-	| "purgeByEmail";
+	| "purgeByEmail"
+	| "adminAuth"
+	| "adminResetRequest"
+	| "adminReset";
 
 type SheetsEnvelope = {
 	ok: boolean;
@@ -149,7 +152,7 @@ async function attempt(
 	}
 }
 
-async function callSheets<T>(
+export async function callSheets<T = unknown>(
 	action: SheetsAction,
 	payload: unknown = {},
 ): Promise<T> {
@@ -164,6 +167,8 @@ async function callSheets<T>(
 		const first = Math.min(perAttempt, DEFAULT_BUDGET_MS);
 		return (await attempt(url, secret, action, payload, first)) as T;
 	} catch (err) {
+		// Auth inclui consumo de token/envio de email: nunca repetir uma mutação.
+		if (action.startsWith("admin")) throw err;
 		const code =
 			err instanceof LeadStoreError ? err.code : ("store_error" as const);
 		if (!isRetryable(code)) throw err;

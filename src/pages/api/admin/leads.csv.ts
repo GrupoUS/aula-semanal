@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { leadSource } from "../../../lib/leads/attribution";
+import { escapeCsv } from "../../../lib/leads/csv";
 import { readAdminSession } from "../../../lib/server/auth";
 import { queryLeads } from "../../../lib/server/leads-store";
 
@@ -25,16 +26,6 @@ const COLUMNS = [
 	"referrer",
 	"landingPath",
 ] as const;
-
-function escapeCsv(value: unknown): string {
-	const text =
-		value == null
-			? ""
-			: typeof value === "object"
-				? JSON.stringify(value)
-				: String(value);
-	return `"${text.replace(/"/g, '""')}"`;
-}
 
 export const GET: APIRoute = async ({ cookies, url }) => {
 	const session = await readAdminSession(cookies);

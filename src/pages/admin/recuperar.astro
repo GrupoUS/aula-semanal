@@ -1,0 +1,94 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import {
+	isRecoveryConfigured,
+	RECOVERY_EMAIL,
+	RECOVERY_USERNAME,
+} from "../../lib/server/admin-recovery";
+import { hasAdminUser } from "../../lib/server/auth";
+
+export const prerender = false;
+const configured = isRecoveryConfigured() && hasAdminUser(RECOVERY_USERNAME);
+const status = Astro.url.searchParams.get("status");
+const messages: Record<string, string> = {
+	sent: "Link enviado para suporte@drasacha.com.br. Confira também o spam. O link vale por 15 minutos e pode ser usado uma vez.",
+	invalid:
+		"Não foi possível atualizar a senha. Confira os campos e reabra o link do e-mail. Se ele expirou ou já foi usado, solicite outro.",
+	unavailable:
+		"Não foi possível enviar ou validar o link agora. Aguarde um minuto e tente novamente. Se persistir, fale com o administrador.",
+};
+const message = status ? messages[status] : null;
+---
+
+<AdminLayout title="Painel · Recuperar senha">
+	<div class="mx-auto mt-10 max-w-md">
+		<p class="text-sm uppercase tracking-[0.18em] text-gold">Acesso interno</p>
+		<h1 class="mt-2 font-display text-h2 text-text-primary">Recuperar senha</h1>
+		<p class="mt-2 text-sm text-text-secondary">
+			A recuperação do usuário {RECOVERY_USERNAME} é enviada exclusivamente para {RECOVERY_EMAIL}.
+		</p>
+		{!configured && (
+			<p role="alert" class="mt-6 rounded-xl border border-gold/40 bg-navy-light p-4 text-sm text-text-primary">
+				A recuperação por e-mail ainda não está disponível. Peça ao administrador para concluir a configuração.
+			</p>
+		)}
+		{message && (
+			<p role={status === "sent" ? "status" : "alert"} class="mt-6 rounded-xl border border-gold/40 bg-navy-light p-4 text-sm text-text-primary">{message}</p>
+		)}
+		{configured && (
+			<>
+				<form id="request-recovery" method="post" action="/api/admin/recovery" class="mt-8 rounded-2xl border border-navy-lighter bg-navy-light p-6">
+					<input type="hidden" name="action" value="request" />
+					<button type="submit" data-pending="Enviando link…" class="min-h-12 w-full rounded-xl bg-gold px-5 py-3 font-semibold text-navy focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy">
+						Enviar link de recuperação
+					</button>
+				</form>
+				<form id="reset-password" method="post" action="/api/admin/recovery" hidden class="mt-8 space-y-5 rounded-2xl border border-navy-lighter bg-navy-light p-6">
+					<input type="hidden" name="action" value="reset" />
+					<input id="reset-token" type="hidden" name="token" />
+					<p class="text-sm text-text-secondary">Use de 12 a 128 caracteres. A nova senha encerra todas as sessões deste usuário.</p>
+					<div>
+						<label for="new-password" class="block text-sm font-medium text-text-secondary">Nova senha (obrigatória)</label>
+						<input id="new-password" name="password" type="password" autocomplete="new-password" required aria-required="true" minlength="12" maxlength="128" class="mt-1 block min-h-12 w-full rounded-xl border border-navy-lighter bg-navy px-4 py-3 text-text-primary focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy" />
+					</div>
+					<div>
+						<label for="confirmation" class="block text-sm font-medium text-text-secondary">Confirmar nova senha (obrigatória)</label>
+						<input id="confirmation" name="confirmation" type="password" autocomplete="new-password" required aria-required="true" minlength="12" maxlength="128" class="mt-1 block min-h-12 w-full rounded-xl border border-navy-lighter bg-navy px-4 py-3 text-text-primary focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy" />
+					</div>
+					<button type="submit" data-pending="Atualizando senha…" class="min-h-12 w-full rounded-xl bg-gold px-5 py-3 font-semibold text-navy focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy">Atualizar senha</button>
+				</form>
+				<noscript><p class="mt-4 text-sm text-text-secondary">Para usar o link de redefinição recebido por e-mail, habilite o JavaScript no navegador.</p></noscript>
+			</>
+		)}
+		<a href="/admin" class="mt-4 inline-flex min-h-12 items-center rounded-md text-sm text-gold underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy">Voltar para o login</a>
+	</div>
+</AdminLayout>
+
+<script>
+	const token = new URLSearchParams(window.location.hash.slice(1)).get("token");
+	if (window.location.hash) history.replaceState(null, "", window.location.pathname + window.location.search);
+	const reset = document.querySelector<HTMLFormElement>("#reset-password");
+	const request = document.querySelector<HTMLFormElement>("#request-recovery");
+	const tokenInput = document.querySelector<HTMLInputElement>("#reset-token");
+	if (token && /^[a-f0-9]{64}$/.test(token) && reset && request && tokenInput) {
+		tokenInput.value = token;
+		request.hidden = true;
+		reset.hidden = false;
+	}
+	const password = document.querySelector<HTMLInputElement>("#new-password");
+	const confirmation = document.querySelector<HTMLInputElement>("#confirmation");
+	for (const input of [password, confirmation]) {
+		input?.addEventListener("input", () => {
+			confirmation?.setCustomValidity(confirmation.value && confirmation.value !== password?.value ? "As senhas precisam ser iguais." : "");
+		});
+	}
+	for (const form of [reset, request]) {
+		form?.addEventListener("submit", () => {
+			const button = form.querySelector<HTMLButtonElement>("button[type=submit]");
+			if (!button) return;
+			button.disabled = true;
+			button.textContent = button.dataset.pending ?? "Aguarde…";
+			form.setAttribute("aria-busy", "true");
+		});
+	}
+</script>

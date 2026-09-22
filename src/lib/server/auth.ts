@@ -1,7 +1,13 @@
 // Auth multiusuário (admin + vendas) com WebCrypto puro — sem dependência externa.
-// Senha nunca em texto: SHA-256 hex em ADMIN_USERS. Sessão assinada HMAC-SHA256
-// com ADMIN_SESSION_SECRET. Comparações timing-safe.
+// PBKDF2 para novas senhas; SHA-256 legado aceito para configuração existente.
+// A revisão vincula a sessão à credencial atual e revoga sessões após reset.
 import type { AstroCookies } from "astro";
+import {
+	isPasswordHash,
+	timingSafeEqual,
+	verifyAdminPassword,
+} from "./admin-password";
+import { getAdminCredentialState, isRecoveryEnabled } from "./admin-recovery";
 import { getMissingEnv, getServerEnv } from "./env";
 
 export const SESSION_COOKIE = "aulaotb_admin_session";
@@ -9,7 +15,8 @@ export const SESSION_TTL_SECONDS = 8 * 60 * 60;
 
 export interface AdminUser {
 	username: string;
-	passwordSha256: string;
+	passwordSha256?: string;
+	passwordHash?: string;
 	role: string;
 }
 
@@ -17,15 +24,10 @@ export interface AdminSession {
 	username: string;
 	role: string;
 	exp: number;
+	revision: string;
 }
 
 const encoder = new TextEncoder();
-
-function bytesToHex(bytes: Uint8Array): string {
-	let hex = "";
-	for (const b of bytes) hex += b.toString(16).padStart(2, "0");
-	return hex;
-}
 
 function bytesToBase64Url(bytes: Uint8Array): string {
 	let binary = "";
@@ -45,11 +47,6 @@ function base64UrlToBytes(value: string): Uint8Array {
 	return bytes;
 }
 
-async function sha256Hex(value: string): Promise<string> {
-	const digest = await crypto.subtle.digest("SHA-256", encoder.encode(value));
-	return bytesToHex(new Uint8Array(digest));
-}
-
 async function hmacSha256(value: string, secret: string): Promise<string> {
 	const key = await crypto.subtle.importKey(
 		"raw",
@@ -66,19 +63,17 @@ async function hmacSha256(value: string, secret: string): Promise<string> {
 	return bytesToBase64Url(new Uint8Array(signature));
 }
 
-function timingSafeEqual(a: string, b: string): boolean {
-	if (a.length !== b.length) return false;
-	let diff = 0;
-	for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-	return diff === 0;
-}
-
 function isAdminUser(u: unknown): u is AdminUser {
+	if (!u || typeof u !== "object") return false;
+	const user = u as Partial<AdminUser>;
 	return (
-		!!u &&
-		typeof (u as AdminUser).username === "string" &&
-		typeof (u as AdminUser).passwordSha256 === "string" &&
-		typeof (u as AdminUser).role === "string"
+		typeof user.username === "string" &&
+		/^[A-Za-z0-9._-]{1,64}$/.test(user.username) &&
+		(isPasswordHash(user.passwordHash) ||
+			(typeof user.passwordSha256 === "string" &&
+				/^[a-f0-9]{64}$/.test(user.passwordSha256))) &&
+		typeof user.role === "string" &&
+		user.role.length > 0
 	);
 }
 
@@ -119,36 +114,78 @@ export function getAdminAuthConfigStatus(): {
 	if (!missing.includes("ADMIN_USERS") && parseAdminUsers().length === 0) {
 		missing.push("ADMIN_USERS");
 	}
+	if (
+		!missing.includes("ADMIN_SESSION_SECRET") &&
+		(getServerEnv("ADMIN_SESSION_SECRET")?.length ?? 0) < 32
+	) {
+		missing.push("ADMIN_SESSION_SECRET");
+	}
 	return { configured: missing.length === 0, missing };
 }
 
-// Acha usuário por username + compara hash da senha — ambos timing-safe.
+export function hasAdminUser(username: string): boolean {
+	return parseAdminUsers().some((user) => user.username === username);
+}
+
+async function currentCredential(user: AdminUser, login = false) {
+	const remote = isRecoveryEnabled()
+		? await getAdminCredentialState(user.username, login)
+		: null;
+	const hash =
+		remote?.passwordHash ?? user.passwordHash ?? user.passwordSha256 ?? "";
+	const revision = await hmacSha256(
+		JSON.stringify([
+			user.username,
+			user.role,
+			hash,
+			remote?.revision ?? "local",
+		]),
+		getServerEnv("ADMIN_SESSION_SECRET") ?? "",
+	);
+	return { hash, revision };
+}
+
+// Teto local protege o bootstrap; com recuperação ativa o Apps Script também
+// limita de forma persistente. O contador local reinicia a cada cold start.
+let loginWindow = { startedAt: 0, count: 0 };
+
 export async function verifyAdminLogin(
 	username: string,
 	password: string,
-): Promise<{ username: string; role: string } | null> {
-	const users = parseAdminUsers();
-	if (users.length === 0) return null;
-
-	const candidateHash = await sha256Hex(password);
-	let matched: AdminUser | null = null;
-	for (const user of users) {
-		const userOk = timingSafeEqual(user.username, username);
-		const passOk = timingSafeEqual(user.passwordSha256, candidateHash);
-		if (userOk && passOk) matched = user;
+): Promise<{ username: string; role: string; revision: string } | null> {
+	if (!getAdminAuthConfigStatus().configured) return null;
+	if (Date.now() - loginWindow.startedAt >= 60000) {
+		loginWindow = { startedAt: Date.now(), count: 0 };
 	}
-	return matched ? { username: matched.username, role: matched.role } : null;
+	if (++loginWindow.count > 20) throw new Error("login_rate_limited");
+	const users = parseAdminUsers();
+	const user = users.find((candidate) =>
+		timingSafeEqual(candidate.username, username),
+	);
+	if (!user) {
+		if (isRecoveryEnabled()) await getAdminCredentialState("_unknown", true);
+		return null;
+	}
+	const credential = await currentCredential(user, true);
+	if (!(await verifyAdminPassword(password, credential.hash))) return null;
+	return {
+		username: user.username,
+		role: user.role,
+		revision: credential.revision,
+	};
 }
 
 export async function createAdminSession(user: {
 	username: string;
 	role: string;
+	revision: string;
 }): Promise<string | null> {
 	const secret = getServerEnv("ADMIN_SESSION_SECRET");
-	if (!secret) return null;
+	if (!secret || secret.length < 32) return null;
 	const payload: AdminSession = {
 		username: user.username,
 		role: user.role,
+		revision: user.revision,
 		exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS,
 	};
 	const body = bytesToBase64Url(encoder.encode(JSON.stringify(payload)));
@@ -159,9 +196,9 @@ export async function createAdminSession(user: {
 export async function readAdminSessionToken(
 	token: string | undefined,
 ): Promise<AdminSession | null> {
-	if (!token) return null;
+	if (!token || token.length > 2048) return null;
 	const secret = getServerEnv("ADMIN_SESSION_SECRET");
-	if (!secret) return null;
+	if (!secret || secret.length < 32) return null;
 
 	const dot = token.lastIndexOf(".");
 	if (dot < 0) return null;
@@ -174,9 +211,22 @@ export async function readAdminSessionToken(
 	try {
 		const json = new TextDecoder().decode(base64UrlToBytes(body));
 		const parsed = JSON.parse(json) as AdminSession;
-		if (typeof parsed.exp !== "number" || parsed.exp * 1000 < Date.now()) {
+		if (
+			!Number.isFinite(parsed.exp) ||
+			parsed.exp * 1000 <= Date.now() ||
+			typeof parsed.username !== "string" ||
+			typeof parsed.role !== "string" ||
+			typeof parsed.revision !== "string"
+		) {
 			return null;
 		}
+		const user = parseAdminUsers().find(
+			(entry) =>
+				entry.username === parsed.username && entry.role === parsed.role,
+		);
+		if (!user) return null;
+		const credential = await currentCredential(user);
+		if (!timingSafeEqual(parsed.revision, credential.revision)) return null;
 		return parsed;
 	} catch {
 		return null;

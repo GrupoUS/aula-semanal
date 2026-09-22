@@ -2,6 +2,8 @@
 
 > Overlay de subdiretório. Vale ao editar qualquer coisa em `src/`. Complementa o root `AGENTS.md` e `.claude/CLAUDE.md`. Valores de instância em `.graph-powers/config.json` (`${...}`).
 
+Este subtree owns the public Astro pages, content contract, server carve-outs, and browser-facing assets.
+
 ## Mapa
 
 ```
@@ -12,6 +14,7 @@ src/
 │   └── 404.astro                   # noindex
 ├── layouts/Layout.astro            # head/SEO/JSON-LD/fonts + Header/Footer/Floating + reveal IO
 ├── components/
+│   ├── AGENTS.md                   # mapa de primitives e seções
 │   ├── shared/{Button,Card,SectionHeading,OtbMark,WhatsAppFloatingButton}.astro
 │   ├── layout/{Header,Footer}.astro
 │   └── landing/*.astro             # seções (ver landing/AGENTS.md)
@@ -40,6 +43,11 @@ src/
 ## Protected
 
 `content.config.ts` e `lib/whatsapp.ts` são protegidos (hook `protect_files.py`). Editar com razão + validar.
+
+## Intent layer
+
+`src/components/AGENTS.md` owns the component boundary; it links the more specific
+`src/components/landing/AGENTS.md` rules for landing sections.
 
 ## Gate
 

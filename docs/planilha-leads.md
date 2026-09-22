@@ -254,7 +254,7 @@ ADMIN_USERS=... ADMIN_SESSION_SECRET=... \
 bun run smoke
 ```
 
-> `ADMIN_USERS` aqui é **descartável**, nunca o de produção: o smoke exige que a senha `senha-correta` valide. Gere o hash com `node scripts/admin-password-hash.mjs "senha-correta"`.
+> `ADMIN_USERS` aqui é **descartável**, nunca o de produção: o smoke exige que a senha sintética `senha-correta` valide. Gere o valor de `passwordHash` com `printf '%s' 'senha-correta' | bun scripts/admin-password-hash.mjs`. Use `ADMIN_PASSWORD_RECOVERY_ENABLED=false` neste bootstrap isolado. A recuperação real e o setup v4 estão em [`operacao-leads-aula-semanal.md`](./operacao-leads-aula-semanal.md).
 
 O smoke agora **falha alto** se o Web App publicado estiver atrás do `Code.gs` do repositório (`Web App na v3`), e confere `fonte`/`midia`/`campanha` vindos da planilha — antes ele mandava `utm_source: "smoke"` e não conferia nada de origem.
 

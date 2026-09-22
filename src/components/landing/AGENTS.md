@@ -2,6 +2,8 @@
 
 > Convenções das seções da landing GPUS. Vale ao editar `src/components/landing/*`. Âncoras e rotas de instância em `.graph-powers/config.json` (`${content.anchors}`, `${content.sections.<key>}`).
 
+Este subtree owns the landing sections, their data props, anchors, and registration-flow presentation.
+
 ## Seções e âncoras
 
 | Componente | Âncora | Consome (`.data`) |
