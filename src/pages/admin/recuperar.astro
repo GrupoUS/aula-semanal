@@ -65,16 +65,20 @@ const message = status ? messages[status] : null;
 </AdminLayout>
 
 <script>
-	const token = new URLSearchParams(window.location.hash.slice(1)).get("token");
-	if (window.location.hash) history.replaceState(null, "", window.location.pathname + window.location.search);
 	const reset = document.querySelector<HTMLFormElement>("#reset-password");
 	const request = document.querySelector<HTMLFormElement>("#request-recovery");
 	const tokenInput = document.querySelector<HTMLInputElement>("#reset-token");
-	if (token && /^[a-f0-9]{64}$/.test(token) && reset && request && tokenInput) {
-		tokenInput.value = token;
-		request.hidden = true;
-		reset.hidden = false;
+	function readRecoveryToken() {
+		const token = new URLSearchParams(window.location.hash.slice(1)).get("token");
+		if (window.location.hash) history.replaceState(null, "", window.location.pathname + window.location.search);
+		if (token && /^[a-f0-9]{64}$/.test(token) && reset && request && tokenInput) {
+			tokenInput.value = token;
+			request.hidden = true;
+			reset.hidden = false;
+		}
 	}
+	readRecoveryToken();
+	window.addEventListener("hashchange", readRecoveryToken);
 	const password = document.querySelector<HTMLInputElement>("#new-password");
 	const confirmation = document.querySelector<HTMLInputElement>("#confirmation");
 	for (const input of [password, confirmation]) {

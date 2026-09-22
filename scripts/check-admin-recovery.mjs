@@ -68,6 +68,11 @@ try {
 		() => events.some((event) => event.method === "Page.loadEventFired"),
 		"carregamento inicial",
 	);
+	await waitFor(
+		() => evaluate('document.readyState === "complete"'),
+		"módulos iniciais executados",
+	);
+	const initialDocument = await evaluate("performance.timeOrigin");
 	assert.equal(
 		await evaluate('document.querySelector("#reset-password")?.hidden'),
 		true,
@@ -99,6 +104,18 @@ try {
 			() => evaluate('location.hash === ""'),
 			"remoção do token da URL",
 		);
+		if (sameDocument) {
+			assert.equal(await evaluate("performance.timeOrigin"), initialDocument);
+			assert.equal(
+				events.some(
+					(event) =>
+						event.method === "Network.requestWillBeSent" &&
+						event.params.type === "Document",
+				),
+				false,
+				"hashchange não deve depender de reload/HMR",
+			);
+		}
 		const state = await evaluate(`({
 			requestHidden: document.querySelector('#request-recovery')?.hidden,
 			resetHidden: document.querySelector('#reset-password')?.hidden,
