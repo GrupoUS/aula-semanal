@@ -1,0 +1,18 @@
+---
+/**
+ * Thin top scroll-progress bar. Decorative (aria-hidden). The fill element
+ * carries [data-scroll-progress]; the shared Layout script writes scaleX(0..1)
+ * on scroll (compositor-only). No-JS: the fill stays at scaleX(0), invisible.
+ */
+---
+
+<div
+	class="pointer-events-none fixed inset-x-0 top-0 z-[var(--z-progress)] h-[3px] bg-transparent"
+	aria-hidden="true"
+>
+	<div
+		class="h-full bg-gradient-to-r from-crimson-bright via-crimson to-gold"
+		data-scroll-progress
+	>
+	</div>
+</div>

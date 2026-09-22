@@ -1,0 +1,44 @@
+---
+import { Picture } from "astro:assets";
+import type { CollectionEntry } from "astro:content";
+import sacha from "../../assets/images/otb/speakers/speaker-sacha.jpg";
+import Button from "../shared/Button.astro";
+
+type Product = CollectionEntry<"products">["data"];
+interface Props {
+	faculty: Product["faculty"];
+	finalCta: Product["finalCta"];
+}
+const { faculty, finalCta } = Astro.props;
+const member = faculty.lista[0];
+---
+
+<section id="autoridade" class="mesa-authority" aria-labelledby="authority-title">
+	<div class="mesa-container mesa-authority-grid">
+		<div class="mesa-authority-portrait">
+			<Picture
+				src={sacha}
+				alt={member.nome}
+				class="mesa-authority-image"
+				formats={["avif", "webp"]}
+				fallbackFormat="jpeg"
+				widths={[480, 720, 960]}
+				sizes="(min-width: 1024px) 40vw, 85vw"
+				quality={75}
+				loading="lazy"
+				pictureAttributes={{ class: "block h-full w-full" }}
+			/>
+		</div>
+		<div class="mesa-authority-copy">
+			<p class="mesa-eyebrow">{faculty.eyebrow}</p>
+			<h2 id="authority-title">{faculty.headline}</h2>
+			<p class="mesa-authority-role">{member.area}</p>
+			<p class="mesa-authority-bio">{member.bio}</p>
+			<div class="mesa-authority-cta">
+				<h3 class="mesa-authority-invite">{finalCta.headline}</h3>
+				<p class="mesa-authority-schedule">{finalCta.subheadline}</p>
+				<Button href={finalCta.primaryHref} class="mesa-button" size="lg">{finalCta.primaryLabel}</Button>
+			</div>
+		</div>
+	</div>
+</section>

@@ -1,0 +1,144 @@
+---
+// Countdown regressivo até o início da aula.
+// Astro puro + script vanilla (zero ilha React). Lê o ISO de `event.startDateISO`.
+// Progressive enhancement: só aparece quando `<html class="js">` está presente;
+// sem JS, os chips de data no Hero continuam comunicando a data. Honra
+// `prefers-reduced-motion` via reset global em global.css.
+interface Props {
+	targetISO: string;
+	label?: string;
+	class?: string;
+	[key: `data-${string}`]: string | undefined;
+}
+
+const {
+	targetISO,
+	label = "A aula ao vivo começa em",
+	class: className = "",
+	...rest
+} = Astro.props;
+
+const units = [
+	{ key: "days", label: "dias" },
+	{ key: "hours", label: "horas" },
+	{ key: "minutes", label: "min" },
+	{ key: "seconds", label: "seg" },
+] as const;
+---
+
+<!-- role="timer" já implica aria-live="off". Um `polite` aqui faria o leitor de
+     tela anunciar o contador a cada segundo; o aviso de "ao vivo agora" tem
+     região própria (role="status") no fim do bloco. -->
+<div
+	class:list={["countdown", className]}
+	data-countdown
+	data-target={targetISO}
+	role="timer"
+	{...rest}
+>
+	{/* Ponto crimson com anel pulsante — marcador de urgência do registro v2.
+	    Crimson é estrutura (urgência), nunca CTA. Decorativo: a informação
+	    está no texto do rótulo e nos próprios dígitos. */}
+	<p class="mb-3 flex items-center gap-2.5 text-xs font-medium uppercase tracking-[0.14em] text-gold/80">
+		<span class="ping-ring inline-flex h-2 w-2 shrink-0" aria-hidden="true">
+			<span class="ping-ring-dot"></span>
+			<span class="relative inline-flex h-2 w-2 rounded-full bg-crimson-bright"></span>
+		</span>
+		{label}
+	</p>
+
+	<div class="flex items-stretch gap-2 sm:gap-3" data-countdown-grid>
+		{
+			units.map((u, i) => (
+				<>
+					{i > 0 && (
+						<span
+							class="self-center pb-4 font-display text-2xl leading-none text-gold/40 sm:text-3xl"
+							aria-hidden="true"
+						>
+							:
+						</span>
+					)}
+					<div class="flex min-w-[3.25rem] flex-col items-center rounded-xl border border-gold/15 bg-navy-light/60 px-3 py-2 shadow-sm sm:min-w-[3.75rem]">
+						<span
+							class="font-display text-2xl font-bold tabular-nums leading-none text-gold sm:text-[2rem]"
+							data-unit={u.key}
+						>
+							--
+						</span>
+						<span class="mt-1.5 text-xs uppercase tracking-[0.12em] text-text-secondary">
+							{u.label}
+						</span>
+					</div>
+				</>
+			))
+		}
+	</div>
+
+	<p
+		class="mt-2 text-sm font-medium text-gold"
+		data-countdown-live
+		role="status"
+		aria-live="polite"
+		hidden
+	>
+		A aula está ao vivo agora.
+	</p>
+</div>
+
+<style>
+	/* Progressive enhancement: esconde até o script confirmar o flag `.js`. */
+	[data-countdown] {
+		display: none;
+	}
+	:global(html.js) [data-countdown] {
+		display: block;
+	}
+</style>
+
+<script>
+	// Atualiza o contador a cada segundo. Enhancement puro: falha em silêncio.
+	(() => {
+		try {
+			const roots = document.querySelectorAll<HTMLElement>("[data-countdown]");
+			roots.forEach((root) => {
+				const raw = root.getAttribute("data-target");
+				const target = raw ? new Date(raw).getTime() : Number.NaN;
+				if (Number.isNaN(target)) return;
+
+				const grid = root.querySelector<HTMLElement>("[data-countdown-grid]");
+				const live = root.querySelector<HTMLElement>("[data-countdown-live]");
+				const out = {
+					days: root.querySelector<HTMLElement>('[data-unit="days"]'),
+					hours: root.querySelector<HTMLElement>('[data-unit="hours"]'),
+					minutes: root.querySelector<HTMLElement>('[data-unit="minutes"]'),
+					seconds: root.querySelector<HTMLElement>('[data-unit="seconds"]'),
+				};
+				const pad = (n: number) => String(n).padStart(2, "0");
+				let timer: ReturnType<typeof setInterval> | undefined;
+
+				const tick = () => {
+					const diff = target - Date.now();
+					if (diff <= 0) {
+						if (grid) grid.hidden = true;
+						if (live) live.hidden = false;
+						if (timer) clearInterval(timer);
+						return;
+					}
+					const totalSec = Math.floor(diff / 1000);
+					if (out.days) out.days.textContent = pad(Math.floor(totalSec / 86400));
+					if (out.hours)
+						out.hours.textContent = pad(Math.floor((totalSec % 86400) / 3600));
+					if (out.minutes)
+						out.minutes.textContent = pad(Math.floor((totalSec % 3600) / 60));
+					if (out.seconds) out.seconds.textContent = pad(totalSec % 60);
+				};
+
+				tick();
+				timer = setInterval(tick, 1000);
+			});
+		} catch {
+			/* contador é enhancement — degrada em silêncio */
+		}
+	})();
+</script>

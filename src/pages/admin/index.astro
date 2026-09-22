@@ -1,0 +1,103 @@
+---
+// Página de login do painel interno (admin + vendas).
+import { getEntry } from "astro:content";
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import {
+	getAdminAuthConfigStatus,
+	readAdminSession,
+} from "../../lib/server/auth";
+
+const product = await getEntry("products", "aula-semanal");
+if (!product) throw new Error("Product aula-semanal not found");
+const shell = product.data.shell;
+
+export const prerender = false;
+
+// Já logado → vai direto ao dashboard.
+const session = await readAdminSession(Astro.cookies);
+if (session) return Astro.redirect("/admin/leads", 303);
+
+const auth = getAdminAuthConfigStatus();
+const errorCode = Astro.url.searchParams.get("error");
+const errorMessage =
+	errorCode === "invalid"
+		? "Usuário ou senha inválidos."
+		: errorCode === "config"
+			? "Sessão não configurada. Avise o administrador."
+			: null;
+---
+
+<AdminLayout title="Painel · Login">
+	<div class="mx-auto mt-10 max-w-md">
+		<p class="text-sm uppercase tracking-[0.18em] text-gold">{shell.adminLabel}</p>
+		<h1 class="mt-2 font-display text-h2 text-text-primary">Acesso interno</h1>
+		<p class="mt-2 text-sm text-text-secondary">
+			Área restrita ao time comercial. Os leads cadastrados ficam disponíveis após o login.
+		</p>
+
+		{
+			!auth.configured && (
+				<div
+					role="alert"
+					class="mt-6 rounded-xl border border-gold/40 bg-navy-light p-4 text-sm text-text-secondary"
+				>
+					Login ainda não configurado (faltam: {auth.missing.join(", ")}). Defina as
+					variáveis de ambiente <code>ADMIN_USERS</code> e
+					<code>ADMIN_SESSION_SECRET</code>.
+				</div>
+			)
+		}
+
+		{
+			errorMessage && (
+				<div
+					role="alert"
+					class="mt-6 rounded-xl border border-red-400/50 bg-navy-light p-4 text-sm text-red-300"
+				>
+					{errorMessage}
+				</div>
+			)
+		}
+
+		<form
+			method="post"
+			action="/api/admin/login"
+			class="mt-8 space-y-5 rounded-2xl border border-navy-lighter bg-navy-light p-6"
+		>
+			<div>
+				<label for="username" class="block text-sm font-medium text-text-secondary">
+					Usuário
+				</label>
+				<input
+					id="username"
+					name="username"
+					type="text"
+					autocomplete="username"
+					required
+					class="mt-1 block min-h-12 w-full rounded-xl border border-navy-lighter bg-navy px-4 py-3 text-text-primary outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy"
+				/>
+			</div>
+
+			<div>
+				<label for="password" class="block text-sm font-medium text-text-secondary">
+					Senha
+				</label>
+				<input
+					id="password"
+					name="password"
+					type="password"
+					autocomplete="current-password"
+					required
+					class="mt-1 block min-h-12 w-full rounded-xl border border-navy-lighter bg-navy px-4 py-3 text-text-primary outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy"
+				/>
+			</div>
+
+			<button
+				type="submit"
+				class="min-h-12 w-full rounded-xl bg-gold px-8 py-3 font-semibold text-navy transition-colors hover:bg-gold-light focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy"
+			>
+				Entrar
+			</button>
+		</form>
+	</div>
+</AdminLayout>

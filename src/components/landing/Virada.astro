@@ -1,0 +1,123 @@
+---
+// Seção de tensão que abre a narrativa de conversão (registro OTB v2): nomeia
+// o teto antes de oferecer a saída. Foto do acervo entra dessaturada e em
+// opacidade baixa — é atmosfera, não conteúdo. A plateia vista de trás diz
+// "sala cheia de gente igual a você" sem precisar de legenda.
+import viradaPhoto from "../../assets/images/otb/gallery/aula-plateia.jpg";
+import SectionPhoto from "../shared/SectionPhoto.astro";
+import SectionPlate from "../shared/SectionPlate.astro";
+
+interface Props {
+	/** Número da placa desta seção. Vem de `index.astro`, que conta só as
+	 *  seções realmente renderizadas — hardcoded aqui, uma seção opcional
+	 *  ausente abriria um buraco na espinha (…03, 05…). */
+	plate: number;
+	virada: {
+		eyebrow: string;
+		headline: string;
+		highlight: string;
+		paragraph: string;
+		quote: string;
+		blockersTitle: string;
+		blockers: Array<{ titulo: string; descricao: string }>;
+	};
+}
+
+const { plate, virada } = Astro.props;
+---
+
+<section
+	id="virada"
+	class="band-deep relative isolate overflow-hidden scroll-mt-24 px-4 py-section sm:px-6 lg:px-8"
+	aria-labelledby="virada-titulo"
+>
+	<SectionPhoto
+		src={viradaPhoto}
+		position="object-[50%_35%]"
+		overlay="center"
+		opacity="opacity-15"
+		motion="parallax"
+		class="grayscale contrast-125"
+	/>
+
+	<div
+		class="mx-auto grid max-w-7xl gap-block lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16"
+	>
+		{/* Coluna esquerda — tensão */}
+		<div>
+			<div class="flex flex-col gap-4" data-reveal="up">
+				<SectionPlate index={plate} eyebrow={virada.eyebrow} />
+
+				{/* mask: o título é revelado por clip-path, sem transform — o
+				    gradiente da segunda linha continua livre depois do reveal. */}
+				<h2
+					id="virada-titulo"
+					class="font-display text-h2 font-extrabold text-balance text-text-primary"
+					data-reveal="mask"
+				>
+					{virada.headline}
+					<span class="text-gradient-gold mt-1.5 block">{virada.highlight}</span>
+				</h2>
+
+				<p class="max-w-prose text-lg leading-relaxed text-pretty text-text-secondary md:text-xl">
+					{virada.paragraph}
+				</p>
+			</div>
+
+			<figure class="mt-block" data-reveal="up" data-reveal-delay="2">
+				<blockquote
+					class="border-l-2 border-gold pl-6 font-display text-xl leading-snug text-balance text-text-primary md:pl-8 md:text-2xl"
+				>
+					{virada.quote}
+				</blockquote>
+			</figure>
+		</div>
+
+		{/* Coluna direita — o que trava */}
+		<div>
+			<p
+				class="text-text-muted text-xs font-semibold uppercase tracking-[0.26em]"
+				data-reveal="up"
+				data-reveal-delay="1"
+			>
+				{virada.blockersTitle}
+			</p>
+
+			<ol
+				class="mt-6 border-t border-gold/15"
+				role="list"
+				data-reveal="up"
+				data-reveal-delay="2"
+			>
+				{
+					virada.blockers.map((blocker, i) => (
+						<li
+							class="group relative flex items-baseline gap-5 border-b border-gold/15 px-4 py-5 transition-colors duration-200 hover:bg-gold/5"
+						>
+							{/* Fio vertical gold cresce no hover — mesma gramática dos
+							    módulos do modelo v2. scaleY é compositor puro. */}
+							<span
+								class="absolute inset-y-0 left-0 w-0.5 origin-top scale-y-0 bg-gold transition-transform duration-300 ease-editorial group-hover:scale-y-100"
+								aria-hidden="true"
+							/>
+							<span
+								class="shrink-0 font-display text-xl font-extrabold tabular-nums text-crimson-bright"
+								aria-hidden="true"
+							>
+								{String(i + 1).padStart(2, "0")}
+							</span>
+							<span>
+								<span class="block font-semibold leading-snug text-text-primary">
+									{blocker.titulo}
+								</span>
+								<span class="mt-1.5 block leading-relaxed text-text-secondary">
+									{blocker.descricao}
+								</span>
+							</span>
+						</li>
+					))
+				}
+			</ol>
+		</div>
+	</div>
+</section>

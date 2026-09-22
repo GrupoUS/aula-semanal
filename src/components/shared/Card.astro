@@ -1,0 +1,34 @@
+---
+interface Props {
+	href?: string;
+	/** External URLs: new tab + rel for security. */
+	external?: boolean;
+	hoverable?: boolean;
+	class?: string;
+}
+
+const {
+	href,
+	external = false,
+	hoverable = false,
+	class: className,
+} = Astro.props;
+
+const baseClasses = "glass-card rounded-plate p-6 md:p-8";
+const hoverClasses = hoverable ? "card-glow-hover cursor-pointer group" : "";
+const classes = [baseClasses, hoverClasses, className]
+	.filter(Boolean)
+	.join(" ");
+
+const Tag = href ? "a" : "div";
+const externalAttrs = external
+	? { target: "_blank", rel: "noopener noreferrer" }
+	: {};
+---
+
+<Tag
+	class={classes}
+	{...(href ? { href, ...externalAttrs } : {})}
+>
+	<slot />
+</Tag>

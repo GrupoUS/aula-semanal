@@ -1,0 +1,328 @@
+{
+	"slug": "aula-semanal",
+	"version": "1.0.0",
+	"locale": "pt-BR",
+	"seo": {
+		"title": "Na Mesa com Sacha | Aulas gratuitas toda terça-feira",
+		"description": "Aulas gratuitas ao vivo com Dra. Sacha Gualberto, toda terça-feira no Zoom. Agenda, captação, posicionamento e vendas para profissionais de Saúde Estética e HOF.",
+		"ogImage": "/og/aula-semanal.png"
+	},
+	"event": {
+		"format": "Ao vivo no Zoom",
+		"date": "Toda terça-feira",
+		"attendanceMode": "online",
+		"stickyTitle": "Na Mesa com Sacha"
+	},
+	"hero": {
+		"headline": "Aulas ao vivo gratuitas.",
+		"highlight": "Toda terça-feira no Zoom.",
+		"subheadline": "Toda semana, uma conversa sobre as decisões que fazem diferença na sua carreira. Agenda, captação, posicionamento e vendas para profissionais de Saúde Estética e HOF.",
+		"portraitAlt": "Dra. Sacha Gualberto sorrindo.",
+		"primaryCta": {
+			"label": "Quero garantir minha vaga",
+			"href": "#inscricao"
+		},
+		"whatsapp": {
+			"label": "Falar com a Laura",
+			"message": "Olá, Laura! Quero participar do Na Mesa com Sacha, as aulas gratuitas de terça-feira."
+		}
+	},
+	"ticker": [
+		"Saúde Estética & HOF",
+		"Toda terça-feira",
+		"Ao vivo no Zoom",
+		"Participação gratuita"
+	],
+	"learn": {
+		"headline": "Nessas aulas você vai entender:",
+		"subheadline": "Um encontro por semana para olhar além da técnica — e pensar o seu trabalho como negócio.",
+		"topics": [
+			{
+				"titulo": "Agenda & captação",
+				"descricao": "Como organizar sua rotina e pensar caminhos para atrair os pacientes certos para o seu trabalho."
+			},
+			{
+				"titulo": "Posicionamento & valor",
+				"descricao": "Como comunicar o que você faz, construir presença e tornar clara a sua proposta de valor."
+			},
+			{
+				"titulo": "Vendas & negócio",
+				"descricao": "Como conduzir conversas comerciais e tomar decisões com mais clareza sobre o seu negócio."
+			}
+		]
+	},
+	"audience": {
+		"headline": "Para profissionais de Saúde Estética e HOF",
+		"items": [
+			{
+				"label": "Agenda e captação"
+			},
+			{
+				"label": "Posicionamento"
+			},
+			{
+				"label": "Vendas"
+			}
+		]
+	},
+	"faculty": {
+		"eyebrow": "Quem está à mesa com você",
+		"headline": "Dra. Sacha Gualberto",
+		"subheadline": "Uma conversa direta sobre carreira, posicionamento e negócio.",
+		"lista": [
+			{
+				"nome": "Dra. Sacha Gualberto",
+				"area": "CEO do Grupo US",
+				"bio": "À frente do Grupo US, Sacha reúne sua experiência em educação e empreendedorismo para conversar sobre os desafios de quem atua na Saúde Estética. No Na Mesa, compartilha raciocínios e decisões sobre agenda, captação, posicionamento e vendas.",
+				"foto": "speaker-sacha"
+			}
+		]
+	},
+	"registration": {
+		"headline": "Preencha seus dados para participar.",
+		"subheadline": "É gratuito. Seu próximo encontro começa aqui.",
+		"submitLabel": "Quero garantir minha vaga",
+		"sendingLabel": "Enviando sua inscrição...",
+		"successTitle": "Inscrição confirmada!",
+		"successBody": "Você está na lista do Na Mesa com Sacha. Acompanhe seu e-mail e WhatsApp para receber as orientações de acesso às aulas.",
+		"errorState": {
+			"title": "Não conseguimos confirmar sua inscrição",
+			"body": "Seus dados continuam preenchidos. Tente novamente ou fale com a Laura no WhatsApp para concluir sua inscrição.",
+			"retryLabel": "Tentar enviar de novo",
+			"whatsapp": {
+				"label": "Garantir minha vaga no WhatsApp",
+				"message": "Olá, Laura! Tentei me inscrever no Na Mesa com Sacha, mas o formulário não confirmou minha inscrição. Pode me ajudar?"
+			},
+			"validationSummary": "Revise os campos destacados.",
+			"validation": {
+				"name": "Informe seu nome completo.",
+				"email": "Informe um e-mail válido.",
+				"phone": "Informe um WhatsApp válido com DDD.",
+				"consent": "É necessário concordar para continuar."
+			}
+		},
+		"consentText": "Autorizo o Grupo US a usar meus dados para enviar informações sobre as aulas e seus programas, conforme a",
+		"privacyHref": "/politica-de-privacidade",
+		"fields": {
+			"nameLabel": "Nome completo",
+			"namePlaceholder": "Seu nome completo",
+			"phoneLabel": "Telefone / WhatsApp",
+			"phonePlaceholder": "(00) 00000-0000",
+			"emailLabel": "E-mail",
+			"emailPlaceholder": "seu@email.com",
+			"experienceLabel": "Tempo de atuação na Saúde Estética (opcional)",
+			"experiencePlaceholder": "Há quanto tempo você atua?",
+			"experiencePayloadLabel": "Tempo de atuação",
+			"experienceOptions": [
+				"Até 1 ano",
+				"De 1 a 3 anos",
+				"De 3 a 5 anos",
+				"Mais de 5 anos"
+			],
+			"revenueLabel": "Faixa de faturamento mensal (opcional)",
+			"revenuePlaceholder": "Selecione uma faixa",
+			"revenuePayloadLabel": "Faturamento mensal",
+			"revenueOptions": [
+				"Até R$ 5 mil",
+				"De R$ 5 mil a R$ 10 mil",
+				"De R$ 10 mil a R$ 30 mil",
+				"Acima de R$ 30 mil",
+				"Prefiro não informar"
+			]
+		},
+		"whatsappFallback": {
+			"label": "Prefere conversar? Fale com a Laura",
+			"message": "Olá, Laura! Quero participar do Na Mesa com Sacha, as aulas gratuitas de terça-feira."
+		},
+		"successState": {
+			"calendarLabel": "Adicionar à agenda",
+			"talkLabel": "Precisa de ajuda?",
+			"talkWhatsapp": {
+				"label": "Fale com a Laura",
+				"message": "Olá, Laura! Me inscrevi no Na Mesa com Sacha e tenho uma dúvida."
+			}
+		},
+		"privacyLabel": "Política de Privacidade",
+		"requiredNote": "* Campos obrigatórios. As duas últimas perguntas são opcionais."
+	},
+	"finalCta": {
+		"headline": "Seu lugar à mesa está aqui.",
+		"subheadline": "Toda terça-feira. Ao vivo no Zoom. Gratuitamente.",
+		"primaryLabel": "Quero garantir minha vaga",
+		"primaryHref": "#inscricao",
+		"whatsapp": {
+			"label": "Falar com a Laura",
+			"message": "Olá, Laura! Quero participar do Na Mesa com Sacha, as aulas gratuitas de terça-feira."
+		}
+	},
+	"shell": {
+		"brand": {
+			"name": "Na Mesa com Sacha",
+			"top": "NA",
+			"main": "MESA",
+			"connector": "com",
+			"host": "Sacha Gualberto",
+			"homeLabel": "Na Mesa com Sacha — Página inicial"
+		},
+		"navigationLabel": "Navegação principal",
+		"navigation": [
+			{
+				"label": "As aulas",
+				"href": "/#aula"
+			},
+			{
+				"label": "Conheça a Sacha",
+				"href": "/#autoridade"
+			}
+		],
+		"footerDescription": "Um encontro semanal para colocar sua carreira na conversa. Aulas gratuitas para profissionais de Saúde Estética e HOF.",
+		"copyright": "Grupo US. Todos os direitos reservados.",
+		"cookieLabel": "Preferências de cookies",
+		"contactLabel": "Falar com a Laura",
+		"instagramLabel": "Instagram da Sacha",
+		"organizationName": "Grupo US",
+		"organizationDescription": "Aulas semanais gratuitas para profissionais de Saúde Estética e HOF, com Dra. Sacha Gualberto.",
+		"adminLabel": "Na Mesa com Sacha · Painel",
+		"adminContactMessage": "Olá! Aqui é da equipe da Dra. Sacha — sobre sua inscrição no Na Mesa com Sacha.",
+		"homeLabel": "Início",
+		"notFound": {
+			"title": "Página não encontrada — Na Mesa com Sacha",
+			"description": "O endereço pode ter mudado. Volte para a página do Na Mesa com Sacha, conheça as aulas gratuitas de terça-feira ou fale com a nossa equipe.",
+			"headline": "Esta página saiu da mesa.",
+			"body": "O endereço pode ter mudado. Volte para o início e encontre seu lugar nas próximas aulas.",
+			"backLabel": "Voltar para o início",
+			"whatsappLabel": "Falar com a Laura",
+			"whatsappMessage": "Olá, Laura! Não encontrei uma página do Na Mesa com Sacha. Pode me ajudar?"
+		}
+	},
+	"legal": {
+		"terms": {
+			"title": "Termos de Uso",
+			"seoTitle": "Termos de Uso — Na Mesa com Sacha",
+			"description": "Conheça os termos de uso do Na Mesa com Sacha, as aulas gratuitas e semanais do Grupo US com Dra. Sacha Gualberto para profissionais de Saúde Estética.",
+			"updated": "Última atualização: 22 de setembro de 2026",
+			"sections": [
+				{
+					"title": "1. Aceitação dos Termos",
+					"paragraphs": [
+						"Ao acessar este site e se inscrever no Na Mesa com Sacha, você concorda com estes Termos de Uso. Caso não concorde com algum dos termos aqui descritos, recomendamos que não utilize nossos serviços."
+					]
+				},
+				{
+					"title": "2. Descrição dos Serviços",
+					"paragraphs": [
+						"Esta página oferece inscrição no Na Mesa com Sacha: aulas gratuitas, ao vivo, toda terça-feira no Zoom, para profissionais de Saúde Estética e HOF. As informações sobre acesso são comunicadas pelos canais de contato informados na inscrição."
+					]
+				},
+				{
+					"title": "3. Propriedade Intelectual",
+					"paragraphs": [
+						"Todo o conteúdo deste site, incluindo textos, imagens, logotipos, vídeos e materiais didáticos, é protegido por direitos autorais e pertence ao Grupo US / Dra. Sacha Gualberto ou a seus licenciadores. A reprodução não autorizada é proibida."
+					]
+				},
+				{
+					"title": "4. Responsabilidades do Usuário",
+					"paragraphs": [
+						"O usuário compromete-se a fornecer informações verídicas ao se inscrever ou entrar em contato, e a utilizar os serviços de forma ética e em conformidade com a legislação brasileira vigente."
+					]
+				},
+				{
+					"title": "5. Limitação de Responsabilidade",
+					"paragraphs": [
+						"O Grupo US não se responsabiliza por eventuais indisponibilidades temporárias do site, nem por danos decorrentes do uso inadequado das informações aqui disponibilizadas."
+					]
+				},
+				{
+					"title": "6. Alterações nos Termos",
+					"paragraphs": [
+						"Reservamo-nos o direito de atualizar estes Termos de Uso a qualquer momento. As alterações entram em vigor imediatamente após publicação nesta página."
+					]
+				},
+				{
+					"title": "7. Contato",
+					"paragraphs": [
+						"Em caso de dúvidas sobre estes Termos de Uso, entre em contato pelo e-mail suporte@drasacha.com.br."
+					]
+				}
+			]
+		},
+		"privacy": {
+			"title": "Política de Privacidade",
+			"seoTitle": "Política de Privacidade — Na Mesa com Sacha",
+			"description": "Conheça a política de privacidade do Na Mesa com Sacha, as aulas gratuitas e semanais do Grupo US com Dra. Sacha Gualberto para profissionais de Saúde Estética.",
+			"updated": "Última atualização: 22 de setembro de 2026",
+			"sections": [
+				{
+					"title": "1. Introdução",
+					"paragraphs": [
+						"O Grupo US / Dra. Sacha Gualberto respeita a privacidade dos seus usuários e está comprometida com a proteção dos dados pessoais coletados por meio deste site, em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei n. 13.709/2018)."
+					]
+				},
+				{
+					"title": "2. Dados Coletados",
+					"paragraphs": [
+						"Ao se inscrever no Na Mesa com Sacha, coletamos os dados necessários para organizar sua participação:"
+					],
+					"items": [
+						"Nome completo",
+						"Endereço de e-mail",
+						"Número de telefone/WhatsApp",
+						"Tempo de atuação na Saúde Estética (opcional)",
+						"Faixa de faturamento mensal (opcional)",
+						"Consentimento e momento em que foi fornecido",
+						"Dados de navegação (cookies, endereço IP, tipo de navegador)"
+					]
+				},
+				{
+					"title": "3. Finalidade da Coleta",
+					"paragraphs": ["Os dados coletados são utilizados para:"],
+					"items": [
+						"Confirmar e organizar sua inscrição na aula gratuita",
+						"Enviar informações sobre a aula, programas e eventos",
+						"Compreender seu momento profissional e adequar as comunicações, quando você responder às perguntas opcionais",
+						"Responder solicitações de contato",
+						"Melhorar a experiência de navegação no site",
+						"Cumprir obrigações legais"
+					]
+				},
+				{
+					"title": "4. Compartilhamento de Dados",
+					"paragraphs": [
+						"Não compartilhamos seus dados pessoais com terceiros, exceto quando necessário para a prestação dos nossos serviços (plataformas de envio de e-mails, mensageria e gestão de inscrições) ou por determinação legal."
+					]
+				},
+				{
+					"title": "5. Armazenamento e Segurança",
+					"paragraphs": [
+						"Adotamos medidas técnicas e organizacionais adequadas para proteger seus dados contra acesso não autorizado, perda ou destruição. Os dados são armazenados em servidores seguros pelo tempo necessário ao cumprimento das finalidades descritas."
+					]
+				},
+				{
+					"title": "6. Direitos do Titular",
+					"paragraphs": [
+						"Você tem direito a acessar, corrigir, excluir ou solicitar a portabilidade dos seus dados pessoais. Para exercer seus direitos, entre em contato pelo e-mail suporte@drasacha.com.br."
+					]
+				},
+				{
+					"title": "7. Cookies",
+					"paragraphs": [
+						"Este site utiliza cookies e tecnologias de medição para melhorar sua experiência de navegação e avaliar o desempenho das campanhas, incluindo o Meta Pixel (Meta/Facebook) e, quando ativo, o Google Analytics. Esses serviços podem coletar dados de navegação de forma pseudonimizada. Você pode configurar seu navegador para recusar cookies, embora isso possa afetar algumas funcionalidades do site."
+					]
+				},
+				{
+					"title": "8. Alterações nesta Política",
+					"paragraphs": [
+						"Esta Política de Privacidade pode ser atualizada periodicamente. Recomendamos que consulte esta página regularmente para se manter informado sobre eventuais alterações."
+					]
+				},
+				{
+					"title": "9. Contato",
+					"paragraphs": [
+						"Para dúvidas ou solicitações relacionadas a esta Política de Privacidade, entre em contato pelo e-mail suporte@drasacha.com.br."
+					]
+				}
+			]
+		},
+		"disclaimer": "Aulas gratuitas de caráter educacional promovidas pelo Grupo US. O conteúdo não constitui promessa de resultado, faturamento ou colocação profissional. Cada profissional deve respeitar a regulamentação de seu conselho de classe."
+	}
+}

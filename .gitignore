@@ -1,0 +1,56 @@
+# build output
+dist/
+
+# generated types
+.astro/
+
+# dependencies
+node_modules/
+
+# logs
+*.log
+npm-debug.log*
+
+# environment variables — nunca commitar segredos.
+# `.env.*` cobre .env.local, .env.production.local, .env.preview.local.
+.env
+.env.*
+!.env.example
+
+# deploy
+.vercel
+
+# Python bytecode (hooks)
+__pycache__/
+*.py[cod]
+
+# estado de sessão de agentes
+.claude/logs/
+.claude/agent-memory/
+.claude/docs/evolution/memory.db
+.claude/scheduled_tasks.lock
+.qa-shots/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+
+# Lighthouse cache (chrome-launcher em WSL)
+C\:*
+
+# Material bruto do corpo docente (fotos em resolução original + .docx dos temas).
+# ~205 MB — versionar poria isso no histórico do git para sempre. Os retratos que a
+# página realmente usa vivem versionados em src/assets/images/otb/speakers/ (~500 KB
+# os cinco), gerados daqui via sharp. Guardar o bruto fora do repo.
+docs/Corpo Docente/
+
+# backups da adoção do harness (locais, nunca versionados)
+*.bak-*
+*.bak
+.claude.bak-*
+
+# graph-powers — artefatos de máquina e kill switch
+.graph-powers/logs/
+.graph-powers/installed.json
+AGENT_STOP

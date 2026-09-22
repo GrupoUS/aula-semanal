@@ -1,0 +1,45 @@
+---
+/**
+ * Marca OTB — monograma vetorial (`otb-mark.svg`, viewBox 822×360).
+ *
+ * O lockup raster antigo era renderizado em caixa quadrada (`h-8 w-8`), o que
+ * espremia uma arte 2,28:1 dentro de 1:1 e ainda tentava exibir a tagline
+ * "OUT OF THE BOX" a ~10px de altura. Aqui a largura é derivada da altura pela
+ * proporção real, então a marca nunca distorce; a tagline vive na copy
+ * (BRAND_TAGLINE), não dentro do ícone.
+ *
+ * Sempre decorativo: o nome acessível é do link/section que envolve a marca.
+ */
+import {
+	BRAND_MARK,
+	BRAND_MARK_HEIGHT,
+	BRAND_MARK_RATIO,
+} from "../../lib/brand";
+
+interface Props {
+	/** Altura renderizada em px; a largura sai da proporção intrínseca. */
+	height?: number;
+	class?: string;
+	/** Above-the-fold usa eager; o resto fica lazy. */
+	eager?: boolean;
+}
+
+const {
+	height = BRAND_MARK_HEIGHT,
+	class: className,
+	eager = false,
+} = Astro.props;
+const width = Math.round(height * BRAND_MARK_RATIO);
+---
+
+<img
+	src={BRAND_MARK}
+	alt=""
+	width={width}
+	height={height}
+	decoding="async"
+	loading={eager ? "eager" : "lazy"}
+	fetchpriority={eager ? "high" : "low"}
+	class:list={["w-auto", className]}
+	aria-hidden="true"
+/>

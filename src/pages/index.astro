@@ -1,0 +1,44 @@
+---
+import { getEntry } from "astro:content";
+import Faculty from "../components/landing/Faculty.astro";
+import Hero from "../components/landing/Hero.astro";
+import Learn from "../components/landing/Learn.astro";
+import MobileCTABar from "../components/landing/MobileCTABar.astro";
+import Layout from "../layouts/Layout.astro";
+
+const product = await getEntry("products", "aula-semanal");
+if (!product) throw new Error("Product aula-semanal not found");
+const d = product.data;
+const personSchema = {
+	"@context": "https://schema.org",
+	"@type": "Person",
+	name: d.faculty.lista[0].nome,
+	jobTitle: d.faculty.lista[0].area,
+	sameAs: ["https://instagram.com/drasachagualberto"],
+};
+---
+
+<Layout
+	title={d.seo.title}
+	description={d.seo.description}
+	ogImage={d.seo.ogImage}
+	whatsappMessage={d.hero.whatsapp.message}
+	jsonLd={personSchema}
+	legalDisclaimer={d.legal.disclaimer}
+>
+	<Hero hero={d.hero} event={d.event} registration={d.registration} />
+	<div class="mesa-ticker">
+		<ul class="mesa-container" role="list">
+			{d.ticker.map((item) => <li>{item}</li>)}
+		</ul>
+	</div>
+	<Learn learn={d.learn} />
+	<Faculty faculty={d.faculty} finalCta={d.finalCta} />
+	<MobileCTABar
+		slot="bottom-cta"
+		label={d.finalCta.primaryLabel}
+		href={d.finalCta.primaryHref}
+		title={d.event.stickyTitle}
+		meta={`${d.event.date} · ${d.event.format}`}
+	/>
+</Layout>

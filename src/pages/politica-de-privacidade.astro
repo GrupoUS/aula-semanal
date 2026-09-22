@@ -1,0 +1,21 @@
+---
+import { getEntry } from "astro:content";
+import LegalContent from "../components/shared/LegalContent.astro";
+import Layout from "../layouts/Layout.astro";
+
+const product = await getEntry("products", "aula-semanal");
+if (!product) throw new Error("Product aula-semanal not found");
+const d = product.data;
+const page = d.legal.privacy;
+---
+
+<Layout
+	title={page.seoTitle}
+	description={page.description}
+	breadcrumbs={[
+		{ name: d.shell.homeLabel, url: new URL("/", Astro.site).toString() },
+		{ name: page.title, url: new URL("/politica-de-privacidade", Astro.site).toString() },
+	]}
+>
+	<LegalContent page={page} />
+</Layout>

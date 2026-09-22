@@ -1,0 +1,77 @@
+---
+import {
+	WHATSAPP_DEFAULT_SITE_MESSAGE,
+	whatsappUrlWithText,
+} from "../../lib/whatsapp";
+import WhatsAppIcon from "./WhatsAppIcon.astro";
+
+interface Props {
+	message?: string;
+}
+
+const { message } = Astro.props;
+
+const href = whatsappUrlWithText(message ?? WHATSAPP_DEFAULT_SITE_MESSAGE);
+---
+
+<a
+	href={href}
+	target="_blank"
+	rel="noopener noreferrer"
+	aria-label="Falar com a Laura no WhatsApp"
+	data-float-wa
+	class="wa-float gold-pulse-glow fixed right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-whatsapp text-white shadow-lg transition-colors hover:bg-whatsapp-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+>
+	<WhatsAppIcon class="h-6 w-6" />
+</a>
+
+<style>
+	/* Hidden until scrolled (transform/opacity only — never layout props). */
+	/* `visibility: hidden` além do opacity: com opacity sozinho o botão
+	   continuava focável pelo Tab e o anel de foco pintava no vazio. */
+	.wa-float {
+		/* Ancorado na MEDIDA da pilha inferior, não num literal. `5.5rem` era o
+		   terceiro lugar do repo a chutar a altura da barra fixa — e o gate de
+		   geometria pegou este botão sobrepondo tanto o CTA fixo quanto o aviso
+		   de cookies. Com a medida, o offset não pode ficar defasado. */
+		bottom: calc(var(--bottom-stack-h, 0px) + var(--safe-bottom, 0px) + 1.5rem);
+		opacity: 0;
+		visibility: hidden;
+		transform: translateY(1rem) scale(0.9);
+		pointer-events: none;
+		transition:
+			opacity 0.3s var(--ease-editorial, ease),
+			visibility 0s linear 0.3s,
+			transform 0.3s var(--ease-editorial, ease),
+			bottom 0.3s var(--ease-editorial, ease),
+			background-color 0.15s ease;
+	}
+	.wa-float.is-visible {
+		opacity: 1;
+		visibility: visible;
+		transform: translateY(0) scale(1);
+		pointer-events: auto;
+	}
+	.wa-float:hover {
+		box-shadow: 0 0 20px color-mix(in srgb, var(--color-whatsapp) 40%, transparent);
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.wa-float {
+			transition: none;
+		}
+	}
+</style>
+
+<noscript>
+	<style>
+		/* Sem JS o CTA fixo nasce visível no rodapé. O offset já vem correto de
+		   `--bottom-stack-h`, que o CSS base fixa em 5rem quando não há script
+		   (html:not(.js).has-bottom-chrome) — só falta tornar o botão visível. */
+		.wa-float {
+			opacity: 1 !important;
+			visibility: visible !important;
+			transform: none !important;
+			pointer-events: auto !important;
+		}
+	</style>
+</noscript>

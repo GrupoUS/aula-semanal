@@ -1,0 +1,24 @@
+---
+import { getEntry } from "astro:content";
+import Button from "../components/shared/Button.astro";
+import Layout from "../layouts/Layout.astro";
+import { whatsappUrlWithText } from "../lib/whatsapp";
+
+const product = await getEntry("products", "aula-semanal");
+if (!product) throw new Error("Product aula-semanal not found");
+const page = product.data.shell.notFound;
+---
+
+<Layout title={page.title} description={page.description} noindex={true}>
+	<section class="min-h-[60vh] flex items-center justify-center px-6 py-20">
+		<div class="max-w-lg mx-auto text-center">
+			<p class="font-editorial text-8xl leading-none text-gold mb-6" aria-hidden="true">404</p>
+			<h1 class="font-editorial text-4xl text-text-primary mb-5">{page.headline}</h1>
+			<p class="text-text-secondary leading-relaxed mb-8">{page.body}</p>
+			<div class="flex flex-col sm:flex-row gap-4 justify-center">
+				<Button href="/" class="mesa-button">{page.backLabel}</Button>
+				<Button href={whatsappUrlWithText(page.whatsappMessage)} variant="outline" target="_blank">{page.whatsappLabel}</Button>
+			</div>
+		</div>
+	</section>
+</Layout>

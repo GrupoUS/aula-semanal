@@ -1,0 +1,13 @@
+# https://github.com/evilmartians/lefthook
+pre-commit:
+  commands:
+    lint:
+      run: bun run lint
+      glob: "{src/**,scripts/**,astro.config.mjs}"
+    # Asserção negativa de PII: nenhum sink de analytics/log pode receber nome,
+    # e-mail ou telefone crus. Rápido (varredura de texto sobre src/) e sem rede.
+    # O gate de geometria NÃO entra aqui: ele sobe um Chrome headless e precisa
+    # de servidor — vive no `predeploy` e no runbook de QA.
+    pii:
+      run: bun run check:pii
+      glob: "src/**"

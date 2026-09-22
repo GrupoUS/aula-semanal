@@ -1,0 +1,20 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+	page: CollectionEntry<"products">["data"]["legal"]["privacy"];
+}
+const { page } = Astro.props;
+---
+
+<article class="mesa-container mesa-legal">
+	<h1>{page.title}</h1>
+	<p class="mesa-legal-updated">{page.updated}</p>
+	{page.sections.map((section) => (
+		<section>
+			<h2>{section.title}</h2>
+			{section.paragraphs.map((paragraph) => <p class="mesa-legal-paragraph">{paragraph}</p>)}
+			{section.items && <ul>{section.items.map((item) => <li>{item}</li>)}</ul>}
+		</section>
+	))}
+</article>

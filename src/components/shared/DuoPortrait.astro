@@ -1,0 +1,84 @@
+---
+import { Image } from "astro:assets";
+import { speakerPortraits } from "../../lib/speaker-portraits";
+import type { SpeakerKey } from "../../lib/speakers";
+
+/**
+ * Plate duplo da primeira dobra: os dois retratos de quem conduz a aula, lado a
+ * lado. Cada retrato é um card 4/5 — moldura de 2px contra o filete hairline do
+ * roster, porque estas duas são as que conduzem a aula e a dobra precisa dizer
+ * isso sem gastar mais superfície gold.
+ *
+ * `data-duo-plate` é o gancho da entrada própria da dobra: as duas fotos
+ * assentam dentro das molduras em sequência (a segunda 90ms atrás) e os nomes
+ * assinam depois, na mesma ordem — duas pessoas entrando em quadro, não um par
+ * simétrico surgindo de uma vez. Regras e reduced-motion em "Portrait motion"
+ * (`src/styles/global.css`). Medido: o LCP desta página é a foto de fundo do
+ * Hero (~1.9M px²), não estas chapas (~42k px²), então a coreografia aqui não
+ * disputa com o LCP.
+ *
+ * SSOT: nome e chave da foto chegam por prop, vindos de `faculty.lista` no
+ * product JSON (selecionados por `hero.duo`). O componente não conhece nenhum
+ * nome próprio — assim a legenda da dobra e o card do corpo docente nunca
+ * divergem.
+ *
+ * `sizes` é medido, não estimado. Duas correções sobre a fase de audit:
+ *  1. o wrapper no Hero cresceu para `max-w-xs/sm/md`, então a chapa fecha em
+ *     154px no mobile, 184px no `sm` e 216px no `lg`;
+ *  2. a dimensão que manda aqui é a ALTURA, não a largura. A fonte é quadrada
+ *     (1240²) numa caixa 4/5 com `object-cover`, logo o crop é dirigido pela
+ *     altura: uma chapa de 216×270 precisa de 270px de fonte, não 216. Medir só
+ *     a largura entregava o rosto a 0.8× em dpr1.
+ */
+interface Props {
+	/** Exatamente 2 pessoas. Menos que isso e o plate não renderiza. */
+	people: Array<{ nome: string; foto: string }>;
+	class?: string;
+}
+
+const { people, class: className } = Astro.props;
+
+// Chave desconhecida é descartada em vez de quebrar o build. O plate só existe
+// como par: com um retrato só a primeira dobra ficaria visualmente truncada.
+const portraits = people.flatMap((person) => {
+	const src = speakerPortraits[person.foto as SpeakerKey];
+	return src ? [{ ...person, src }] : [];
+});
+const renderable = portraits.length === 2 ? portraits : [];
+---
+
+{
+	renderable.length > 0 && (
+		<div
+			class:list={["grid grid-cols-2 gap-3 sm:gap-4", className]}
+			data-duo-plate
+		>
+			{renderable.map((portrait) => (
+				<figure>
+					<div class="portrait-plate aspect-[4/5] overflow-hidden rounded-plate border-2 border-[color-mix(in_srgb,var(--color-gold)_30%,transparent)]">
+						<Image
+							src={portrait.src}
+							alt={`Retrato de ${portrait.nome}, que conduz a aula.`}
+							widths={[200, 240, 280, 400, 480, 560]}
+							sizes="(min-width: 1024px) 270px, (min-width: 640px) 230px, 193px"
+							loading="eager"
+							decoding="async"
+							class="h-full w-full object-cover object-top"
+							data-portrait-photo
+						/>
+					</div>
+					{/* Crédito, não rótulo. Em `text-kicker` + 0.28em + caixa alta o nome
+					    quebrava em 2 linhas nas três viewports medidas ("Sacha" /
+					    "Gualberto") e lia como thumbnail. Em display, peso 700, tracking
+					    fechado e `text-primary` (≈16:1 sobre navy, contra 7.2:1 do gold)
+					    ele volta a ler como nome próprio em 1 linha — e devolve gold à
+					    oferta. Alinhamento é herdado do Hero: centro no mobile, esquerda
+					    no `lg`. */}
+					<figcaption class="mt-2.5 font-display text-meta font-bold tracking-tight text-text-primary sm:text-body">
+						{portrait.nome}
+					</figcaption>
+				</figure>
+			))}
+		</div>
+	)
+}

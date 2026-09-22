@@ -1,0 +1,14 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+	brand: CollectionEntry<"products">["data"]["shell"]["brand"];
+	class?: string;
+}
+const { brand, class: className } = Astro.props;
+---
+
+<span class:list={["mesa-mark", className]}>
+	<span class="mesa-mark-name"><span>{brand.top}</span><strong>{brand.main}</strong></span>
+	<span class="mesa-mark-host"><em>{brand.connector}</em> {brand.host}</span>
+</span>

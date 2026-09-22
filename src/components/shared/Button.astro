@@ -1,0 +1,61 @@
+---
+interface Props {
+	variant?: "primary" | "whatsapp" | "outline" | "ghost";
+	href?: string;
+	size?: "sm" | "md" | "lg";
+	class?: string;
+	target?: string;
+	ariaLabel?: string;
+}
+
+const {
+	variant = "primary",
+	href,
+	size = "md",
+	class: className,
+	target,
+	ariaLabel,
+	...rest
+} = Astro.props;
+
+const sizeClasses: Record<string, string> = {
+	sm: "min-h-11 px-4 text-sm",
+	md: "min-h-11 lg:min-h-12 px-6 text-base",
+	lg: "min-h-12 lg:min-h-14 px-8 text-lg",
+};
+
+const variantClasses: Record<string, string> = {
+	primary: "btn-primary gold-glow",
+	whatsapp: "btn-whatsapp",
+	outline: "btn-secondary",
+	ghost: "btn-ghost",
+};
+
+const classes = [
+	"btn-base rounded-lg",
+	sizeClasses[size],
+	variantClasses[variant],
+	className,
+]
+	.filter(Boolean)
+	.join(" ");
+
+const Tag = href ? "a" : "button";
+
+const linkAttrs = href
+	? {
+			href,
+			...(target ? { target } : {}),
+			...(target === "_blank" ? { rel: "noopener noreferrer" } : {}),
+		}
+	: {};
+---
+
+<Tag
+	class={classes}
+	{...linkAttrs}
+	{...rest}
+	{...(ariaLabel ? { "aria-label": ariaLabel } : {})}
+>
+	<slot />
+</Tag>

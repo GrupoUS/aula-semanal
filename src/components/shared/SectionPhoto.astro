@@ -1,0 +1,73 @@
+---
+import { Image } from "astro:assets";
+/**
+ * Full-bleed atmospheric section photo (never a card). Renders an
+ * astro:assets-optimized image as an absolutely-positioned background layer
+ * plus a token-only navy gradient overlay for legibility + brand mood.
+ *
+ * The host <section> must be `relative isolate overflow-hidden`.
+ * Motion (`parallax` | `ken-burns`) is defined in global.css and is fully
+ * progressively-enhanced + `prefers-reduced-motion` safe.
+ */
+import type { ImageMetadata } from "astro";
+
+interface Props {
+	src: ImageMetadata;
+	/** Empty alt = decorative (default); pass meaningful alt only when the photo carries info not already in text. */
+	alt?: string;
+	/** Tailwind object-position utility, e.g. "object-center" | "object-right" | "object-[50%_30%]". */
+	position?: string;
+	/** Overlay gradient variant tuned for where the copy sits. */
+	overlay?: "navy" | "navy-right" | "navy-left" | "center";
+	/** Tailwind opacity utility for the photo layer, e.g. "opacity-100" | "opacity-40". */
+	opacity?: string;
+	/** Eager-load when the photo is above the fold. */
+	eager?: boolean;
+	/** Scroll/idle motion treatment. */
+	motion?: "parallax" | "ken-burns" | "none";
+	class?: string;
+}
+
+const {
+	src,
+	alt = "",
+	position = "object-center",
+	overlay = "navy",
+	opacity = "opacity-100",
+	eager = false,
+	motion = "parallax",
+	class: className,
+} = Astro.props;
+
+const overlays: Record<NonNullable<Props["overlay"]>, string> = {
+	navy: "bg-gradient-to-b from-ink-950/75 via-ink-950/88 to-ink-950",
+	"navy-right": "bg-gradient-to-r from-ink-950 via-ink-950/88 to-ink-950/55",
+	"navy-left": "bg-gradient-to-l from-ink-950 via-ink-950/88 to-ink-950/55",
+	center: "bg-gradient-to-b from-ink-950/90 via-ink-950/82 to-ink-950/95",
+};
+
+const motionAttr =
+	motion === "parallax"
+		? { "data-bg-parallax": true }
+		: motion === "ken-burns"
+			? { "data-ken-burns": true }
+			: {};
+---
+
+<div
+	class:list={["pointer-events-none absolute inset-0 -z-10 overflow-hidden", className]}
+	aria-hidden={alt ? undefined : "true"}
+>
+	<Image
+		src={src}
+		alt={alt}
+		widths={[640, 1024, 1536, 1920]}
+		sizes="100vw"
+		loading={eager ? "eager" : "lazy"}
+		decoding="async"
+		fetchpriority={eager ? "high" : "low"}
+		class:list={["h-full w-full object-cover", position, opacity]}
+		{...motionAttr}
+	/>
+	<div class:list={["absolute inset-0", overlays[overlay]]} aria-hidden="true"></div>
+</div>

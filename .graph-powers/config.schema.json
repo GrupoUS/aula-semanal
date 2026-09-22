@@ -1,0 +1,321 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "aula-semanal — config do projeto (graph-powers + camada GPUS)",
+  "description": "Contrato unico deste repositorio. Cobre o que o plugin graph-powers le (git, tooling, paths, graphGuardrails, protectedFiles) mais a camada de produto que so existe aqui (content, lead, tracking), consumida pelos ${...} de .claude/CLAUDE.md. O schema do plugin nao conhece a segunda metade, por isso este arquivo continua sendo a fonte.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "project",
+    "git",
+    "paths",
+    "tooling",
+    "gates"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "name",
+        "displayName",
+        "stack",
+        "stagingUrl",
+        "productionUrl",
+        "locale"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Machine-readable slug, e.g. 'aula-semanal'."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Human-readable name, e.g. 'Na Mesa com Sacha — Grupo US'."
+        },
+        "parentBrand": {
+          "type": "string",
+          "description": "Parent brand, e.g. 'Grupo US · Dra. Sacha Gualberto'."
+        },
+        "purpose": {
+          "type": "string",
+          "description": "One-line product purpose."
+        },
+        "stack": {
+          "type": "string"
+        },
+        "stagingUrl": {
+          "type": "string"
+        },
+        "productionUrl": {
+          "type": "string"
+        },
+        "locale": {
+          "type": "string"
+        },
+        "designModelRepo": {
+          "type": "string",
+          "description": "Optional sibling repo used as the visual model, e.g. '../referencia-visual'."
+        }
+      }
+    },
+    "content": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Content SSOT mapping for the landing.",
+      "properties": {
+        "productSlug": {
+          "type": "string",
+          "description": "Content Collection slug, e.g. 'aula-semanal'."
+        },
+        "productJson": {
+          "type": "string",
+          "description": "Path to the copy SSOT JSON, e.g. 'src/content/products/<slug>.json'."
+        },
+        "ogImage": {
+          "type": "string",
+          "description": "Default OG image path under public/."
+        },
+        "anchors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Internal section anchors."
+        },
+        "legalRoutes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Legal routes, e.g. ['/termos','/politica-de-privacidade']."
+        },
+        "sections": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Component → anchor map for design chains."
+        }
+      }
+    },
+    "lead": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Lead capture + WhatsApp SDR config.",
+      "properties": {
+        "sdrName": {
+          "type": "string",
+          "description": "SDR display name, e.g. 'Laura' (GPUS default)."
+        },
+        "whatsappGreeting": {
+          "type": "string",
+          "description": "Mandatory WhatsApp message prefix, e.g. 'Olá, Laura!'."
+        },
+        "whatsappHelper": {
+          "type": "string",
+          "description": "WhatsApp SSOT helper module path."
+        },
+        "formComponent": {
+          "type": "string",
+          "description": "Lead form component path."
+        },
+        "endpointEnv": {
+          "type": "string",
+          "description": "Env var name holding the form POST endpoint."
+        },
+        "leadTable": {
+          "type": "string",
+          "description": "DB table name for leads, if any."
+        }
+      }
+    },
+    "tracking": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Analytics env var names (values live in env, never committed).",
+      "properties": {
+        "ga4Env": {
+          "type": "string"
+        },
+        "pixelEnv": {
+          "type": "string"
+        }
+      }
+    },
+    "paths": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "tooling": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "packageManager",
+        "buildTool",
+        "typeChecker",
+        "linter"
+      ],
+      "properties": {
+        "packageManager": {
+          "type": "string"
+        },
+        "buildTool": {
+          "type": "string"
+        },
+        "typeChecker": {
+          "type": "string"
+        },
+        "linter": {
+          "type": "string"
+        },
+        "testRunner": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "null quando o projeto nao tem test runner — e o caso aqui. Declarar null diz que a ausencia e deliberada; omitir o campo diz que ninguem olhou."
+        },
+        "deployer": {
+          "type": "string"
+        },
+        "frontendFramework": {
+          "type": "string"
+        },
+        "database": {
+          "type": "string"
+        },
+        "orm": {
+          "type": "string"
+        },
+        "commands": {
+          "type": "object",
+          "description": "Comando literal por gate. Um gate apontando para script inexistente morre como 'script not found' e a linha do relatorio parece coberta — so entra aqui comando que foi executado.",
+          "properties": {
+            "typeCheck": {
+              "type": "string"
+            },
+            "lint": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string"
+            },
+            "test": {
+              "type": "string"
+            },
+            "build": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "lighthouse": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "lcp": {
+          "type": "number"
+        },
+        "cls": {
+          "type": "number"
+        },
+        "inp": {
+          "type": "number"
+        },
+        "initialJsKb": {
+          "type": "number"
+        }
+      }
+    },
+    "protectedFiles": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "exact": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "segments": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "contains": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Arquivos que nenhum agente escreve. Aplicado por protect_files.py do plugin. Os arrays SUBSTITUEM os defaults do plugin em vez de somar — repetir .git/node_modules/.env e proposital."
+    },
+    "rulesDir": {
+      "type": "string"
+    },
+    "templatesDir": {
+      "type": "string"
+    },
+    "agentsFile": {
+      "type": "string"
+    },
+    "claudeMdFile": {
+      "type": "string"
+    },
+    "git": {
+      "type": "object",
+      "description": "Trilhos de git lidos por git_commit_gate, git_push_gate, git_branch_gate e branch_session_notice.",
+      "required": [
+        "workBranch",
+        "protectedBranches",
+        "optInPrefix"
+      ],
+      "properties": {
+        "workBranch": {
+          "type": "string",
+          "description": "Branch onde o trabalho acontece. Aqui e `main`: o repo e main-only por decisao do AGENTS.md."
+        },
+        "protectedBranches": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Nenhum push nem checkout que pouse HEAD aqui sem opt-in no turno. ATENCAO: _deep_merge substitui arrays por inteiro."
+        },
+        "optInPrefix": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]*$",
+          "description": "Prefixo das chaves <PREFIXO>_ALLOW_*. Precisa ser distinto por repositorio: com o mesmo prefixo em dois repos, uma aprovacao dada num deles vale no outro."
+        }
+      }
+    },
+    "graphGuardrails": {
+      "type": "object",
+      "description": "Tetos do grafo de execucao aplicados por graph_guardrails.py. Existem para pegar runaway, nao para apertar trabalho normal.",
+      "properties": {
+        "maxSpawnsPerSession": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxRoundsPerAgent": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

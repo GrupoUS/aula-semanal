@@ -1,0 +1,146 @@
+---
+import Icon from "../shared/Icon.astro";
+import SectionHeading from "../shared/SectionHeading.astro";
+
+interface Props {
+	/** Número da placa desta seção. Vem de `index.astro`, que conta só as
+	 *  seções realmente renderizadas — hardcoded aqui, uma seção opcional
+	 *  ausente abriria um buraco na espinha (…03, 05…). */
+	plate: number;
+	audience: {
+		headline: string;
+		subheadline?: string;
+		intro?: string;
+		items: Array<{ label: string; note?: string; highlight?: boolean }>;
+		forYou?: {
+			title: string;
+			items: Array<{ label: string; note?: string }>;
+		};
+		notForYou?: {
+			title: string;
+			items: Array<{ label: string }>;
+		};
+	};
+}
+
+const { plate, audience } = Astro.props;
+const { forYou, notForYou } = audience;
+---
+
+<section id="para-quem" class="band-base scroll-mt-24 px-4 py-section sm:px-6 lg:px-8">
+	<div class="mx-auto max-w-5xl">
+		<SectionHeading
+			title={audience.headline}
+			subtitle={audience.subheadline}
+			index={plate}
+			align="left"
+		/>
+
+		{audience.intro && (
+			<p
+				class="mt-8 max-w-prose text-lg leading-relaxed text-pretty text-text-secondary"
+				data-reveal="up"
+			>
+				{audience.intro}
+			</p>
+		)}
+
+		<ul
+			class="mt-10 flex flex-wrap gap-2.5"
+			aria-label="Profissões da saúde atendidas"
+			role="list"
+			data-reveal="up"
+			data-chip-stagger
+		>
+			{audience.items.map((item) => (
+				<li
+					class:list={[
+						"inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium",
+						item.highlight
+							? "border-gold/50 bg-gold/10 text-gold-light shadow-panel"
+							: "border-gold/15 bg-navy-light/40 text-text-primary",
+					]}
+				>
+					<span
+						class:list={[
+							"inline-block shrink-0 rounded-full bg-gold",
+							item.highlight ? "h-2 w-2 gold-glow" : "h-1.5 w-1.5",
+						]}
+						aria-hidden="true"
+					></span>
+					{item.label}
+				</li>
+			))}
+		</ul>
+
+		{(forYou || notForYou) && (
+			<div class="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-2">
+				{forYou && (
+					<div
+						class="rounded-plate border border-gold/30 bg-gold/5 p-6 shadow-panel md:p-8"
+						data-reveal="up"
+						data-reveal-delay="1"
+					>
+						<div class="flex items-center gap-3">
+							<span
+								class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-gold/40 bg-gold/15 text-gold gold-glow"
+								aria-hidden="true"
+							>
+								<Icon name="check" class="h-5 w-5" />
+							</span>
+							<h3 class="font-display text-xl font-bold text-text-primary md:text-2xl">
+								{forYou.title}
+							</h3>
+						</div>
+						<ul class="mt-6 space-y-4" role="list">
+							{forYou.items.map((item) => (
+								<li class="flex items-start gap-3">
+									<Icon
+										name="check"
+										class="mt-0.5 h-5 w-5 shrink-0 text-gold"
+									/>
+									<span class="leading-relaxed text-text-primary">
+										{item.label}
+									</span>
+								</li>
+							))}
+						</ul>
+					</div>
+				)}
+
+				{notForYou && (
+					<div
+						class="rounded-plate border border-gold/10 bg-navy-light/40 p-6 md:p-8"
+						data-reveal="up"
+						data-reveal-delay="2"
+					>
+						<div class="flex items-center gap-3">
+							<span
+								class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-gold/15 bg-navy-light/60 text-text-muted"
+								aria-hidden="true"
+							>
+								<Icon name="x" class="h-5 w-5" />
+							</span>
+							<h3 class="font-display text-xl font-bold text-text-secondary md:text-2xl">
+								{notForYou.title}
+							</h3>
+						</div>
+						<ul class="mt-6 space-y-4" role="list">
+							{notForYou.items.map((item) => (
+								<li class="flex items-start gap-3">
+									<Icon
+										name="x"
+										class="mt-0.5 h-5 w-5 shrink-0 text-text-muted"
+									/>
+									<span class="leading-relaxed text-text-secondary">
+										{item.label}
+									</span>
+								</li>
+							))}
+						</ul>
+					</div>
+				)}
+			</div>
+		)}
+	</div>
+</section>

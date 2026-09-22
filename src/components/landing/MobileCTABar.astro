@@ -1,0 +1,61 @@
+---
+// Sticky CTA — registro v2: aparece em TODAS as larguras a partir de 80% da
+// primeira viewport (motion.ts), e no mesmo instante o botão flutuante do
+// WhatsApp recolhe. À esquerda o contexto do evento, à direita a ação.
+interface Props {
+	label: string;
+	href?: string;
+	/** Título curto da barra. Copy — vem de `event.stickyTitle`. */
+	title?: string;
+	/** Linha de contexto (data/formato). Copy — vem do JSON. */
+	meta?: string;
+}
+
+const { label, href = "#inscricao", title, meta } = Astro.props;
+const hasContext = Boolean(title || meta);
+---
+
+<!-- Linha da pilha #bottom-chrome: sem `fixed`, sem z-index e sem safe-area
+     própria — o container é dono dos três. Blocos irmãos em fluxo normal não
+     podem se sobrepor, que é como o CTA fixo e o aviso de cookies deixam de
+     disputar espaço por offset. -->
+<div class="chrome-row" data-chrome-row="cta">
+	<div class="chrome-row-clip">
+		<div
+			class="chrome-row-content border-t border-gold/20 bg-ink-950/95 backdrop-blur-md"
+			data-sticky-cta
+		>
+			<div
+				class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8"
+			>
+				{
+					hasContext && (
+						<span class="hidden min-w-0 flex-col gap-0.5 sm:flex">
+							{title && (
+								<span class="text-sm font-semibold leading-tight text-text-primary">
+									{title}
+								</span>
+							)}
+							{meta && (
+								<span class="text-text-muted text-xs font-medium uppercase leading-tight tracking-[0.16em] tabular-nums">
+									{meta}
+								</span>
+							)}
+						</span>
+					)
+				}
+				<a
+					href={href}
+					data-shine
+					data-conversion-zone
+					class:list={[
+						"focus-ring-on-gold shrink-0 rounded-xl bg-gold px-6 py-3.5 text-center text-base font-semibold text-navy transition-colors duration-200 hover:bg-gold-light",
+						hasContext ? "flex-1 sm:flex-none" : "block w-full",
+					]}
+				>
+						{label}
+				</a>
+			</div>
+		</div>
+	</div>
+</div>

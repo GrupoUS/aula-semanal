@@ -1,0 +1,55 @@
+---
+// Faixa de fotos do acervo. A seção carrega `gallery.label` como rótulo e cada
+// foto tem alt real: esconder um acervo inteiro do leitor de tela seria abrir
+// mão de prova social que já existe. As cópias que o marquee cria nascem
+// `aria-hidden`, então a lista é anunciada uma única vez. As dimensões saem do
+// próprio ImageMetadata para manter CLS em zero.
+import { Image } from "astro:assets";
+import type { GalleryKey } from "../../lib/gallery";
+import { galleryImages } from "../../lib/gallery-images";
+
+interface Props {
+	gallery: {
+		label: string;
+		photos: Array<{ key: GalleryKey; alt: string }>;
+	};
+}
+
+const { gallery } = Astro.props;
+
+// Altura de render fixa; a largura acompanha o aspect ratio de cada foto.
+const RENDER_HEIGHT = 340;
+
+const photos = gallery.photos.map((photo) => {
+	const src = galleryImages[photo.key];
+	return {
+		...photo,
+		src,
+		width: Math.round(RENDER_HEIGHT * (src.width / src.height)),
+		height: RENDER_HEIGHT,
+	};
+});
+---
+
+<section
+	class="band-deep overflow-hidden border-y border-gold/15"
+	aria-label={gallery.label}
+>
+	<ul class="m-0 list-none gap-4 py-0" role="list" style="--marquee-dur: 54s; --marquee-gap: 1rem" data-marquee>
+		{
+			photos.map((photo) => (
+				<li class="shrink-0">
+					<Image
+						src={photo.src}
+						alt={photo.alt}
+						width={photo.width}
+						height={photo.height}
+						loading="lazy"
+						decoding="async"
+						class="h-[clamp(10rem,20vh,15rem)] w-auto object-cover opacity-80 grayscale transition-[filter,opacity] duration-300 hover:opacity-100 hover:grayscale-0"
+					/>
+				</li>
+			))
+		}
+	</ul>
+</section>

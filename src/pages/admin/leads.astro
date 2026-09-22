@@ -1,0 +1,420 @@
+---
+// Dashboard de leads — visão única compartilhada por admin + vendas.
+import { getEntry } from "astro:content";
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { leadSource } from "../../lib/leads/attribution";
+import type { StoredLead } from "../../lib/leads/schema";
+import { readAdminSession } from "../../lib/server/auth";
+import {
+	getLeadStoreConfigStatus,
+	getLeadsDashboard,
+	LeadStoreError,
+} from "../../lib/server/leads-store";
+import { whatsappPartnerUrl } from "../../lib/whatsapp";
+
+const product = await getEntry("products", "aula-semanal");
+if (!product) throw new Error("Product aula-semanal not found");
+const shell = product.data.shell;
+
+export const prerender = false;
+
+const session = await readAdminSession(Astro.cookies);
+if (!session) return Astro.redirect("/admin", 303);
+
+const PER_PAGE = 200;
+const params = Astro.url.searchParams;
+
+// Filtros (todos via querystring GET → estado compartilhável por link).
+const statusParam = params.get("status") ?? "";
+const status =
+	statusParam === "novo" || statusParam === "contatado"
+		? statusParam
+		: undefined;
+const professionParam = (params.get("profession") ?? "").trim();
+const profession = professionParam || undefined;
+const nameParam = (params.get("q") ?? "").trim();
+const name = nameParam || undefined;
+const isDate = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v);
+const fromParam = (params.get("from") ?? "").trim();
+const dateFrom = isDate(fromParam) ? fromParam : undefined;
+const toParam = (params.get("to") ?? "").trim();
+const dateTo = isDate(toParam) ? toParam : undefined;
+
+const pageParam = Number.parseInt(params.get("page") ?? "1", 10);
+const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
+
+const store = getLeadStoreConfigStatus();
+let leads: StoredLead[] = [];
+let total = 0;
+let stats = { total: 0, novos: 0, contatados: 0 };
+let professions: string[] = [];
+let storeError = false;
+let storeErrorCode = "";
+
+if (store.configured) {
+	try {
+		// Uma única ida ao Apps Script resolve leads + total + stats + profissões.
+		// Três chamadas separadas custariam 3 execuções por render (~3s e quota).
+		const dashboard = await getLeadsDashboard({
+			status,
+			profession,
+			name,
+			dateFrom,
+			dateTo,
+			limit: PER_PAGE,
+			offset: (page - 1) * PER_PAGE,
+		});
+		leads = dashboard.leads;
+		total = dashboard.total;
+		stats = dashboard.stats;
+		professions = dashboard.professions;
+	} catch (err) {
+		storeError = true;
+		storeErrorCode = err instanceof LeadStoreError ? err.code : "store_error";
+	}
+}
+
+const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
+const currentPage = Math.min(page, totalPages);
+const rangeStart = total === 0 ? 0 : (currentPage - 1) * PER_PAGE + 1;
+const rangeEnd = Math.min(currentPage * PER_PAGE, total);
+const hasFilters = Boolean(status || profession || name || dateFrom || dateTo);
+
+// Querystring base (sem `page`) → preservada em links de página, CSV e ações.
+const baseParams = new URLSearchParams();
+if (status) baseParams.set("status", status);
+if (profession) baseParams.set("profession", profession);
+if (name) baseParams.set("q", name);
+if (dateFrom) baseParams.set("from", dateFrom);
+if (dateTo) baseParams.set("to", dateTo);
+
+const pageHref = (p: number) => {
+	const sp = new URLSearchParams(baseParams);
+	if (p > 1) sp.set("page", String(p));
+	const qs = sp.toString();
+	return qs ? `/admin/leads?${qs}` : "/admin/leads";
+};
+const csvHref = (() => {
+	const qs = baseParams.toString();
+	return qs ? `/api/admin/leads.csv?${qs}` : "/api/admin/leads.csv";
+})();
+// Estado atual (com página) → ações de linha retornam pra mesma view.
+const currentReturn = (() => {
+	const sp = new URLSearchParams(baseParams);
+	if (currentPage > 1) sp.set("page", String(currentPage));
+	const qs = sp.toString();
+	return qs ? `?${qs}` : "";
+})();
+
+const dateFmt = new Intl.DateTimeFormat("pt-BR", {
+	day: "2-digit",
+	month: "2-digit",
+	year: "numeric",
+	hour: "2-digit",
+	minute: "2-digit",
+	timeZone: "America/Sao_Paulo",
+});
+const fmtDate = (iso?: string | null) =>
+	iso ? dateFmt.format(new Date(iso)) : "—";
+
+// Link de WhatsApp para o LEAD (telefone próprio, normalizado p/ E.164 com 55).
+const LEAD_GREETING = shell.adminContactMessage;
+const leadWhatsapp = (phone: string): string | null => {
+	const digits = phone.replace(/\D/g, "");
+	const full = digits.startsWith("55") ? digits : `55${digits}`;
+	try {
+		return whatsappPartnerUrl(full, LEAD_GREETING);
+	} catch {
+		return null;
+	}
+};
+
+const fieldClass =
+	"min-h-10 w-full rounded-xl border border-navy-lighter bg-navy px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus-visible:border-gold focus-visible:outline-none";
+const labelClass = "text-xs font-medium text-text-muted";
+---
+
+<AdminLayout title="Painel · Leads">
+	<header class="flex flex-wrap items-center justify-between gap-4">
+		<div>
+			<p class="text-sm uppercase tracking-[0.18em] text-gold">{shell.adminLabel}</p>
+			<h1 class="mt-1 font-display text-h2 text-text-primary">Leads cadastrados</h1>
+			<p class="mt-1 text-sm text-text-secondary">
+				Sessão: {session.username} · {session.role}
+			</p>
+		</div>
+		<div class="flex items-center gap-3">
+			<a
+				href={csvHref}
+				class="min-h-10 rounded-xl border border-gold/50 px-4 py-2 text-sm font-medium text-gold transition-colors hover:bg-gold hover:text-navy"
+			>
+				Baixar CSV
+			</a>
+			<form method="post" action="/api/admin/logout">
+				<button
+					type="submit"
+					class="min-h-10 rounded-xl border border-navy-lighter px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
+				>
+					Sair
+				</button>
+			</form>
+		</div>
+	</header>
+
+	{
+		!store.configured && (
+			<div
+				role="alert"
+				class="mt-6 rounded-xl border border-gold/40 bg-navy-light p-4 text-sm text-text-secondary"
+			>
+				Planilha de leads não configurada (falta: {store.missing.join(", ")}).
+				Defina <code>SHEETS_WEBAPP_URL</code> e <code>SHEETS_SHARED_SECRET</code>{" "}
+				no ambiente — passo a passo em <code>docs/planilha-leads.md</code>.
+			</div>
+		)
+	}
+	{
+		storeError && (
+			<div
+				role="alert"
+				class="mt-6 rounded-xl border border-red-400/50 bg-navy-light p-4 text-sm text-red-300"
+			>
+				Erro ao consultar a planilha de leads (código: <code>{storeErrorCode}</code>).
+				{storeErrorCode === "store_unauthorized" &&
+					" O segredo compartilhado não bate com a Propriedade de Script SHARED_SECRET."}
+				{storeErrorCode === "store_invalid_response" &&
+					" A resposta não foi JSON — confira se a implantação usa a URL /exec e se o acesso está como “Qualquer pessoa”."}
+				{storeErrorCode === "store_timeout" &&
+					" O Apps Script não respondeu a tempo. Tente novamente em instantes."}
+			</div>
+		)
+	}
+
+	<section class="mt-8 grid grid-cols-3 gap-4">
+		<div class="rounded-2xl border border-navy-lighter bg-navy-light p-5">
+			<p class="text-sm text-text-muted">Total</p>
+			<p class="mt-1 font-display text-h3 tabular-nums text-text-primary">{stats.total}</p>
+		</div>
+		<div class="rounded-2xl border border-navy-lighter bg-navy-light p-5">
+			<p class="text-sm text-text-muted">Novos</p>
+			<p class="mt-1 font-display text-h3 tabular-nums text-gold">{stats.novos}</p>
+		</div>
+		<div class="rounded-2xl border border-navy-lighter bg-navy-light p-5">
+			<p class="text-sm text-text-muted">Contatados</p>
+			<p class="mt-1 font-display text-h3 tabular-nums text-text-primary">{stats.contatados}</p>
+		</div>
+	</section>
+
+	<form
+		method="get"
+		action="/admin/leads"
+		class="mt-8 grid gap-4 rounded-2xl border border-navy-lighter bg-navy-light p-5 sm:grid-cols-2 lg:grid-cols-6"
+		aria-label="Filtros de leads"
+	>
+		<div class="flex flex-col gap-1 lg:col-span-2">
+			<label class={labelClass} for="f-name">Nome</label>
+			<input
+				id="f-name"
+				type="search"
+				name="q"
+				value={nameParam}
+				placeholder="Buscar por nome"
+				class={fieldClass}
+			/>
+		</div>
+		<div class="flex flex-col gap-1">
+			<label class={labelClass} for="f-profession">Perfil profissional</label>
+			<select id="f-profession" name="profession" class={fieldClass}>
+				<option value="">Todas</option>
+				{
+					professions.map((p) => (
+						<option value={p} selected={p === professionParam}>
+							{p}
+						</option>
+					))
+				}
+			</select>
+		</div>
+		<div class="flex flex-col gap-1">
+			<label class={labelClass} for="f-status">Status</label>
+			<select id="f-status" name="status" class={fieldClass}>
+				<option value="" selected={!status}>Todos</option>
+				<option value="novo" selected={status === "novo"}>Novos</option>
+				<option value="contatado" selected={status === "contatado"}>
+					Contatados
+				</option>
+			</select>
+		</div>
+		<div class="flex flex-col gap-1">
+			<label class={labelClass} for="f-from">De</label>
+			<input id="f-from" type="date" name="from" value={fromParam} class={fieldClass} />
+		</div>
+		<div class="flex flex-col gap-1">
+			<label class={labelClass} for="f-to">Até</label>
+			<input id="f-to" type="date" name="to" value={toParam} class={fieldClass} />
+		</div>
+		<div class="flex items-end gap-2 sm:col-span-2 lg:col-span-6">
+			<button
+				type="submit"
+				class="min-h-10 rounded-xl bg-gold px-5 py-2 text-sm font-semibold text-navy transition-colors hover:bg-gold-light"
+			>
+				Filtrar
+			</button>
+			{
+				hasFilters && (
+					<a
+						href="/admin/leads"
+						class="min-h-10 rounded-xl border border-navy-lighter px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
+					>
+						Limpar
+					</a>
+				)
+			}
+		</div>
+	</form>
+
+	<section class="mt-6 overflow-x-auto rounded-2xl border border-navy-lighter">
+		<table class="w-full min-w-[64rem] border-collapse text-left text-sm">
+			<thead class="bg-navy-light text-text-muted">
+				<tr>
+					<th class="px-4 py-3 font-medium">Lead</th>
+					<th class="px-4 py-3 font-medium">Contato</th>
+					<th class="px-4 py-3 font-medium">Perfil profissional</th>
+					<th class="px-4 py-3 font-medium">Origem</th>
+					<th class="px-4 py-3 font-medium">Status</th>
+					<th class="px-4 py-3 font-medium">Atualizado</th>
+					<th class="px-4 py-3 font-medium">Ação</th>
+				</tr>
+			</thead>
+			<tbody>
+				{
+					leads.length === 0 && (
+						<tr>
+							<td colspan="7" class="px-4 py-10 text-center text-text-muted">
+								Nenhum lead neste filtro.
+							</td>
+						</tr>
+					)
+				}
+				{
+					leads.map((lead) => {
+						const wa = leadWhatsapp(lead.phone);
+						const contacted = lead.status === "contatado";
+						// Valor GRAVADO na planilha (colunas P/Q/R). `Astro.url.hostname`
+						// sai daqui: no preview da Vercel ele fazia o painel mostrar
+						// origem diferente da que a planilha guarda para o mesmo lead.
+						const src = leadSource(lead);
+						return (
+							<tr class="border-t border-navy-lighter align-top">
+								<td class="px-4 py-3">
+									<p class="font-medium text-text-primary">{lead.name}</p>
+									<p class="text-xs text-text-muted">{lead.id}</p>
+									<p class="text-xs text-text-muted">Entrada: {fmtDate(lead.createdAt)}</p>
+								</td>
+								<td class="px-4 py-3 text-text-secondary">
+									<p>{lead.phone}</p>
+									<p class="break-all text-xs text-text-muted">{lead.email}</p>
+								</td>
+								<td class="px-4 py-3 text-text-secondary">{lead.profession ?? "—"}</td>
+							<td class="px-4 py-3 text-text-secondary">
+								<p>{src.fonte}</p>
+								{(src.midia || src.campanha) && (
+									<p class="text-xs text-text-muted">
+										{[src.midia, src.campanha].filter(Boolean).join(" · ")}
+									</p>
+								)}
+							</td>
+								<td class="px-4 py-3">
+									<span
+										class:list={[
+											"inline-flex rounded-full px-3 py-1 text-xs font-medium",
+											contacted
+												? "bg-whatsapp/20 text-whatsapp"
+												: "bg-gold/20 text-gold",
+										]}
+									>
+										{contacted ? "Contatado" : "Novo"}
+									</span>
+								</td>
+								<td class="px-4 py-3 text-text-muted">{fmtDate(lead.updatedAt)}</td>
+								<td class="px-4 py-3">
+									<div class="flex flex-col gap-2">
+										{wa && (
+											<a
+												href={wa}
+												target="_blank"
+												rel="noopener noreferrer"
+												class="min-h-9 rounded-lg bg-whatsapp px-3 py-2 text-center text-xs font-semibold text-navy transition-colors hover:bg-whatsapp-hover"
+											>
+												Chamar no WhatsApp
+											</a>
+										)}
+										<form method="post" action="/api/admin/contacted">
+											<input type="hidden" name="id" value={lead.id} />
+											<input type="hidden" name="contacted" value={String(!contacted)} />
+											<input type="hidden" name="return" value={currentReturn} />
+											<button
+												type="submit"
+												class="min-h-9 w-full rounded-lg border border-navy-lighter px-3 py-2 text-xs font-medium text-text-secondary transition-colors hover:text-text-primary"
+											>
+												{contacted ? "Desmarcar contatado" : "Marcar contatado"}
+											</button>
+										</form>
+									</div>
+								</td>
+							</tr>
+						);
+					})
+				}
+			</tbody>
+		</table>
+	</section>
+
+	<nav
+		class="mt-6 flex flex-wrap items-center justify-between gap-4"
+		aria-label="Paginação"
+	>
+		<p class="text-sm text-text-muted tabular-nums">
+			{
+				total === 0
+					? "Nenhum lead"
+					: `Mostrando ${rangeStart}–${rangeEnd} de ${total}`
+			}
+		</p>
+		<div class="flex items-center gap-2">
+			{
+				currentPage > 1 ? (
+					<a
+						href={pageHref(currentPage - 1)}
+						rel="prev"
+						class="min-h-10 rounded-xl border border-navy-lighter px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
+					>
+						Anterior
+					</a>
+				) : (
+					<span class="min-h-10 cursor-not-allowed rounded-xl border border-navy-lighter px-4 py-2 text-sm font-medium text-text-muted opacity-50">
+						Anterior
+					</span>
+				)
+			}
+			<span class="px-2 text-sm text-text-secondary tabular-nums">
+				Página {currentPage} de {totalPages}
+			</span>
+			{
+				currentPage < totalPages ? (
+					<a
+						href={pageHref(currentPage + 1)}
+						rel="next"
+						class="min-h-10 rounded-xl border border-navy-lighter px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
+					>
+						Próxima
+					</a>
+				) : (
+					<span class="min-h-10 cursor-not-allowed rounded-xl border border-navy-lighter px-4 py-2 text-sm font-medium text-text-muted opacity-50">
+						Próxima
+					</span>
+				)
+			}
+		</div>
+	</nav>
+</AdminLayout>

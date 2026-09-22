@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="120" viewBox="0 0 500 120">
+  <rect width="500" height="120" fill="#081c2a"/>
+  <g fill="#fafaf9" font-family="Arial,sans-serif">
+    <text x="24" y="40" font-size="24" font-weight="700">NA</text>
+    <path d="M24 47h127" stroke="#fafaf9" stroke-width="3"/>
+    <text x="22" y="92" font-size="46" font-weight="700" letter-spacing="-2">MESA</text>
+    <text x="169" y="87" font-family="Georgia,serif" font-style="italic" font-size="24" fill="#efd6ad">com</text>
+    <text x="224" y="87" font-size="24">Sacha Gualberto</text>
+  </g>
+</svg>

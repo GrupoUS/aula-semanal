@@ -1,0 +1,112 @@
+---
+import { splitHighlight } from "../../lib/text";
+import Icon from "../shared/Icon.astro";
+import SectionPlate from "../shared/SectionPlate.astro";
+
+interface Props {
+	/** Número da placa desta seção. Vem de `index.astro`, que conta só as
+	 *  seções realmente renderizadas — hardcoded aqui, uma seção opcional
+	 *  ausente abriria um buraco na espinha (…03, 05…). */
+	plate: number;
+	comparison: {
+		eyebrow?: string;
+		headline: string;
+		highlight?: string;
+		subheadline?: string;
+		withoutLabel: string;
+		withLabel: string;
+		rows: Array<{ without: string; with: string }>;
+	};
+}
+
+const { plate, comparison: c } = Astro.props;
+const { pre, mid, post } = splitHighlight(c.headline, c.highlight);
+---
+
+<section class="band-alt px-4 py-section sm:px-6 lg:px-8">
+	<div class="mx-auto max-w-5xl">
+		<div class="flex flex-col gap-4 text-center" data-reveal="up">
+			<SectionPlate index={plate} eyebrow={c.eyebrow} align="center" />
+			<h2
+				class="font-display text-h2 font-extrabold text-balance text-text-primary"
+			>
+				{pre}{mid && <span class="text-gradient-gold">{mid}</span>}{post}
+			</h2>
+			{
+				c.subheadline && (
+					<p class="mx-auto max-w-prose text-lg leading-relaxed text-pretty text-text-secondary">
+						{c.subheadline}
+					</p>
+				)
+			}
+		</div>
+
+		<div class="mt-14 grid grid-cols-1 gap-6 md:grid-cols-2">
+			<!-- Sem método -->
+			<div
+				class="rounded-plate border border-gold/10 bg-navy-light/40 p-6 md:p-8"
+				data-reveal="left"
+			>
+				<h3
+					class="flex items-center gap-2 text-lg font-semibold text-text-muted"
+				>
+					<span
+						class="inline-flex h-7 w-7 items-center justify-center rounded-full border border-text-muted/30 text-text-muted"
+						aria-hidden="true"
+					>
+						<Icon name="x" class="h-4 w-4" />
+					</span>
+					{c.withoutLabel}
+				</h3>
+				<ul class="mt-6 space-y-4" role="list" data-chip-stagger>
+					{
+						c.rows.map((row) => (
+							<li class="flex items-start gap-3 text-text-secondary">
+								<span
+									class="mt-1 inline-flex h-4 w-4 shrink-0 items-center justify-center text-text-muted/70"
+									aria-hidden="true"
+								>
+									<Icon name="x" class="h-4 w-4" />
+								</span>
+								<span class="leading-relaxed text-pretty">{row.without}</span>
+							</li>
+						))
+					}
+				</ul>
+			</div>
+
+			<!-- Com método -->
+			<div
+				class="glass-card-bright rounded-plate border-t-2 border-t-gold p-6 md:p-8"
+				data-reveal="right"
+			>
+				<h3
+					class="flex items-center gap-2 text-lg font-semibold text-gold-light"
+				>
+					<span
+						class="gold-glow inline-flex h-7 w-7 items-center justify-center rounded-full border border-gold bg-gold/15 text-gold"
+						aria-hidden="true"
+					>
+						<Icon name="check" class="h-4 w-4" />
+					</span>
+					{c.withLabel}
+				</h3>
+				<ul class="mt-6 space-y-4" role="list" data-chip-stagger>
+					{
+						c.rows.map((row) => (
+							<li class="flex items-start gap-3 text-text-primary">
+								<span
+									class="mt-1 inline-flex h-4 w-4 shrink-0 items-center justify-center text-gold"
+									aria-hidden="true"
+								>
+									<Icon name="check" class="h-4 w-4" />
+								</span>
+								<span class="leading-relaxed text-pretty">{row.with}</span>
+							</li>
+						))
+					}
+				</ul>
+			</div>
+		</div>
+	</div>
+</section>

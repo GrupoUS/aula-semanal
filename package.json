@@ -1,0 +1,49 @@
+{
+  "name": "aula-semanal",
+  "type": "module",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "lint": "bunx biome check src scripts astro.config.mjs && bunx oxlint src scripts --ignore-pattern 'src/layouts/*' --ignore-pattern 'scripts/apps-script/*'",
+    "lint:fix": "bunx biome check src scripts astro.config.mjs --write && bunx oxlint src scripts --ignore-pattern 'src/layouts/*' --ignore-pattern 'scripts/apps-script/*' --fix --fix-suggestions",
+    "check:pii": "bun scripts/check-no-pii-analytics.ts",
+    "check:geometry": "node scripts/chrome-geometry.mjs",
+    "check:states": "node scripts/check-form-states.mjs",
+    "verify:vercel": "node scripts/verify-vercel-upload.mjs",
+    "smoke": "bun scripts/smoke.ts",
+    "lighthouse:audit": "node scripts/lighthouse-audit.mjs",
+    "predeploy": "bun run lint && bun run check:pii && bunx astro check && bun run build && bun run verify:vercel && bun scripts/check-no-pii-analytics.ts --dist",
+    "prepare": "lefthook install || true"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.8",
+    "@astrojs/react": "^5.0.1",
+    "@astrojs/sitemap": "^3.7.1",
+    "@astrojs/vercel": "^10.0.8",
+    "@tailwindcss/vite": "^4.2.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "astro": "^6.0.8",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.6.0",
+    "motion": "^12.38.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "tailwind-merge": "^3.5.0",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^6.0.2"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.9",
+    "chrome-launcher": "^1.2.1",
+    "lefthook": "^2.1.4",
+    "lighthouse": "^13.0.3",
+    "oxlint": "^1.57.0"
+  }
+}

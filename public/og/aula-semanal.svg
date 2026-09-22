@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#081c2a"/>
+  <g fill="none" stroke="#d8b88a" opacity=".55">
+    <path d="M1020-100C820 200 980 630 470 700"/>
+    <path d="M1170-100C880 340 1240 620 770 760"/>
+    <path d="M-100 510C320 740 970 650 1310 480"/>
+  </g>
+  <g fill="#fafaf9" font-family="Arial,sans-serif">
+    <text x="90" y="118" font-size="24" font-weight="700">NA</text>
+    <path d="M90 128h125" stroke="#fafaf9" stroke-width="3"/>
+    <text x="88" y="171" font-size="46" font-weight="700" letter-spacing="-2">MESA</text>
+    <text x="235" y="167" font-family="Georgia,serif" font-style="italic" font-size="25" fill="#efd6ad">com</text>
+    <text x="293" y="167" font-size="25">Sacha Gualberto</text>
+    <text x="87" y="290" font-family="Georgia,serif" font-size="65">Aulas ao vivo gratuitas.</text>
+    <text x="87" y="373" font-family="Georgia,serif" font-size="65" fill="#efd6ad">Toda terça-feira no Zoom.</text>
+    <text x="91" y="450" font-size="23" fill="#b8c0d0">Agenda · Captação · Posicionamento · Vendas</text>
+    <text x="91" y="556" font-size="17" letter-spacing="3" fill="#d8b88a">SAÚDE ESTÉTICA &amp; HOF · GRUPO US</text>
+  </g>
+</svg>

@@ -1,0 +1,130 @@
+---
+// Banner de consentimento de cookies (LGPD, modelo aviso/opt-out). Chrome
+// site-wide — texto legal, não copy de produto (mesma categoria do skip-link
+// e do <noscript> em Layout.astro), por isso vive aqui e não no productJson.
+// Default = consentido: o Pixel já dispara PageView no load (ver Layout).
+// "Recusar" grava revoke + fbq('consent','revoke'); "Aceitar" grava grant.
+const privacyHref = "/politica-de-privacidade";
+---
+
+<!-- O aviso NÃO é mais um elemento fixo com offset próprio: ele é uma linha da
+     pilha #bottom-chrome, montada em Layout.astro. Ancorá-lo por offset já
+     falhou duas vezes (bottom-0, depois 5rem) porque a conta não fecha — em
+     1440x1000 o submit termina em y=995 e sobram 5px de folga. Quem decide
+     QUANDO ele aparece é o motion.ts, por limiar derivado da geometria; aqui
+     só mora a decisão de consentimento. -->
+<div class="chrome-row" data-chrome-row="consent">
+	<div class="chrome-row-clip">
+		<div class="chrome-row-content flex justify-center px-3 pt-2 pb-2 sm:px-4">
+			<div
+				id="cookie-consent"
+				role="region"
+				aria-label="Aviso de cookies"
+				tabindex="-1"
+				class="glass-card w-full max-w-2xl rounded-plate border border-gold/20 p-3 shadow-2xl md:p-4"
+			>
+				<div
+					class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-4"
+				>
+					{/* Copy curta de propósito: cada linha extra aumenta a faixa que a
+					    pilha ocupa, e faixa maior significa mais scroll em que ela
+					    precisa ceder para não cobrir uma zona de conversão. */}
+					<p class="text-xs leading-relaxed text-text-secondary md:text-sm">
+						Usamos cookies e tecnologias de medição para entender o uso da
+						página.{" "}
+						<a
+							href={privacyHref}
+							class="text-gold underline-offset-2 hover:underline"
+						>
+							Política de Privacidade
+						</a>.
+					</p>
+					<div class="flex shrink-0 gap-3">
+						<button
+							type="button"
+							data-consent-action="reject"
+							class="btn-base btn-ghost rounded-xl min-h-11 px-5 text-sm"
+						>
+							Recusar
+						</button>
+						<button
+							type="button"
+							data-consent-action="accept"
+							class="btn-base btn-primary rounded-xl min-h-11 px-6 text-sm"
+						>
+							Aceitar
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	import {
+		CONSENT_GRANTED,
+		CONSENT_KEY,
+		CONSENT_REVOKED,
+	} from "../../lib/consent";
+
+	type WindowWithFbq = Window & { fbq?: (...args: unknown[]) => void };
+
+	const root = document.documentElement;
+	const region = document.getElementById("cookie-consent");
+
+	if (region) {
+		// Contrato com o motion.ts: este script é dono da DECISÃO
+		// (`data-consent-pending` no <html>); o motion.ts é dono da
+		// VISIBILIDADE (limiar de scroll). O atributo é a única interface.
+		const notifyChrome = () =>
+			window.dispatchEvent(new Event("bottomchrome:change"));
+
+		const setConsent = (grant: boolean) => {
+			try {
+				localStorage.setItem(
+					CONSENT_KEY,
+					grant ? CONSENT_GRANTED : CONSENT_REVOKED,
+				);
+			} catch {
+				/* storage indisponível — decisão não persiste, mas não quebra */
+			}
+			try {
+				const w = window as WindowWithFbq;
+				w.fbq?.("consent", grant ? "grant" : "revoke");
+			} catch {
+				/* Pixel pode não existir — tracking é opcional */
+			}
+			root.removeAttribute("data-consent-pending");
+			root.removeAttribute("data-consent-forced");
+			notifyChrome();
+		};
+
+		region.addEventListener("click", (e) => {
+			const btn = (e.target as HTMLElement | null)?.closest<HTMLElement>(
+				"[data-consent-action]",
+			);
+			if (!btn) return;
+			setConsent(btn.dataset.consentAction === "accept");
+		});
+
+		// Reabertura pelo rodapé. Antes disso a escolha era IRREVERSÍVEL: uma vez
+		// gravada, não havia caminho na interface para revê-la.
+		// `data-consent-forced` ignora o limiar de scroll — a exibição passou a
+		// ser pedida pela pessoa, então não é oclusão inesperada.
+		document.addEventListener("click", (e) => {
+			const trigger = (e.target as HTMLElement | null)?.closest(
+				"[data-consent-open]",
+			);
+			if (!trigger) return;
+			root.setAttribute("data-consent-pending", "");
+			root.setAttribute("data-consent-forced", "");
+			notifyChrome();
+			// Foco só DEPOIS de a linha abrir: focar elemento `inert` falha em
+			// silêncio, e a linha só perde o `inert` no próximo update do motion.
+			requestAnimationFrame(() =>
+				requestAnimationFrame(() => region.focus?.()),
+			);
+		});
+	}
+</script>

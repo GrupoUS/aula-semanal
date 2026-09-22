@@ -1,0 +1,110 @@
+---
+import pointingPhoto from "../../assets/sacha/sacha-pointing.jpg";
+import { whatsappUrlWithText } from "../../lib/whatsapp";
+import Button from "../shared/Button.astro";
+import OtbMark from "../shared/OtbMark.astro";
+import SectionPhoto from "../shared/SectionPhoto.astro";
+import WhatsAppIcon from "../shared/WhatsAppIcon.astro";
+
+interface Props {
+	finalCta: {
+		headline: string;
+		subheadline?: string;
+		primaryLabel: string;
+		primaryHref: string;
+		whatsapp: { label: string; message: string };
+	};
+}
+
+const { finalCta } = Astro.props;
+const whatsappUrl = whatsappUrlWithText(finalCta.whatsapp.message);
+---
+
+<section class="band-alt relative isolate overflow-hidden px-4 py-section text-center sm:px-6 lg:px-8">
+	<SectionPhoto
+		src={pointingPhoto}
+		position="object-[62%_22%]"
+		overlay="center"
+		motion="ken-burns"
+	/>
+
+	<!-- Gold halo — CTA spotlight (overdrive depth, token-only). -->
+	<div
+		class="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[70vw] max-h-[36rem] w-[70vw] max-w-[36rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold/10 blur-3xl"
+		aria-hidden="true"
+	></div>
+
+	<!-- Wash crimson subindo da base (registro v2): dá temperatura ao último
+	     bloco sem competir com o halo gold do CTA. Parallax lento porque o
+	     transform desta camada está livre. -->
+	<div
+		class="pointer-events-none absolute inset-x-0 -bottom-1/3 -z-10 h-[80%] bg-[radial-gradient(ellipse_at_50%_100%,color-mix(in_srgb,var(--color-crimson)_30%,transparent)_0%,transparent_62%)]"
+		aria-hidden="true"
+		data-parallax
+		data-speed="0.05"
+	>
+	</div>
+
+	<div class="mx-auto max-w-3xl">
+		<!-- Marca OTB como carimbo focal do CTA. Scrim radial atrás garante
+		     leitura sobre a foto. -->
+		<div
+			class="relative mx-auto mb-8 flex w-fit justify-center"
+			aria-hidden="true"
+			data-reveal="scale"
+		>
+			<span
+				class="pointer-events-none absolute inset-0 -z-10 scale-[1.9] rounded-full bg-navy/55 blur-2xl"
+			></span>
+			<OtbMark height={72} class="h-18" />
+		</div>
+
+		{/* mask: clip-path, sem transform — o balanceamento do texto e o halo do
+		    CTA logo abaixo continuam livres depois do reveal. */}
+		<h2
+			class="font-display text-h1 font-extrabold text-balance text-text-primary"
+			data-reveal="mask"
+			data-reveal-delay="1"
+		>
+			{finalCta.headline}
+		</h2>
+		{finalCta.subheadline && (
+			<p
+				class="mx-auto mt-5 max-w-xl text-xl leading-relaxed text-pretty text-text-secondary"
+				data-reveal="up"
+				data-reveal-delay="2"
+			>
+				{finalCta.subheadline}
+			</p>
+		)}
+
+		<div
+			class="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
+			data-reveal="up"
+			data-reveal-delay="3"
+		>
+			<Button
+				variant="primary"
+				href={finalCta.primaryHref}
+				size="lg"
+				class="gold-pulse-glow w-full sm:w-auto"
+				data-shine
+				data-cro="click_cta_final"
+			>
+				{finalCta.primaryLabel}
+			</Button>
+			<Button
+				variant="whatsapp"
+				href={whatsappUrl}
+				size="lg"
+				target="_blank"
+				class="w-full sm:w-auto"
+				ariaLabel="Falar com a Laura no WhatsApp"
+				data-cro="click_whatsapp_final"
+			>
+				<WhatsAppIcon class="mr-2 h-5 w-5" />
+				{finalCta.whatsapp.label}
+			</Button>
+		</div>
+	</div>
+</section>

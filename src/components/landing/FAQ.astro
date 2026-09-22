@@ -1,0 +1,93 @@
+---
+import SectionHeading from "../shared/SectionHeading.astro";
+
+interface Props {
+	/** Número da placa desta seção. Vem de `index.astro`, que conta só as
+	 *  seções realmente renderizadas — hardcoded aqui, uma seção opcional
+	 *  ausente abriria um buraco na espinha (…03, 05…). */
+	plate: number;
+	faqs: Array<{ question: string; answer: string }>;
+}
+
+const { plate, faqs } = Astro.props;
+
+const faqJsonLd = {
+	"@context": "https://schema.org",
+	"@type": "FAQPage",
+	mainEntity: faqs.map((faq) => ({
+		"@type": "Question",
+		name: faq.question,
+		acceptedAnswer: {
+			"@type": "Answer",
+			text: faq.answer,
+		},
+	})),
+};
+---
+
+<section id="faq" class="band-base scroll-mt-24 px-4 py-section sm:px-6 lg:px-8">
+	<div class="mx-auto max-w-3xl">
+		<SectionHeading title="Perguntas frequentes" index={plate} />
+
+		<div class="mt-14 space-y-3" data-reveal="up">
+			{faqs.map((faq) => (
+				<details class="group glass-card-quiet rounded-plate transition-[background-color,border-color,box-shadow] duration-300 open:bg-navy-light/80 open:border-gold/30 open:shadow-lg open:shadow-gold/5 open:border-l-2 open:border-l-gold">
+					<summary class="flex cursor-pointer list-none items-center justify-between p-6 font-semibold text-text-primary [&::-webkit-details-marker]:hidden hover:text-gold transition-colors duration-200">
+						<span>{faq.question}</span>
+						<svg
+							class="ml-4 h-5 w-5 shrink-0 text-gold transition-transform duration-300 group-open:rotate-180"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							aria-hidden="true"
+						>
+							<path d="m6 9 6 6 6-6" />
+						</svg>
+					</summary>
+					<div
+						class="max-w-prose px-6 pb-6 pt-0 leading-relaxed text-pretty text-text-secondary"
+						data-faq-panel
+					>
+						{faq.answer}
+					</div>
+				</details>
+			))}
+		</div>
+	</div>
+</section>
+
+<script
+	type="application/ld+json"
+	is:inline
+	set:html={JSON.stringify(faqJsonLd)}
+/>
+
+<script>
+	// CRO: dispara faq_open na primeira abertura de cada pergunta.
+	type WindowWithTrackers = Window & {
+		fbq?: (...args: unknown[]) => void;
+		gtag?: (...args: unknown[]) => void;
+	};
+	document
+		.querySelectorAll<HTMLDetailsElement>("#faq details")
+		.forEach((d) => {
+			let fired = false;
+			d.addEventListener("toggle", () => {
+				if (!d.open || fired) return;
+				fired = true;
+				try {
+					window.dispatchEvent(
+						new CustomEvent("cro", { detail: { name: "faq_open" } }),
+					);
+					const w = window as WindowWithTrackers;
+					w.fbq?.("trackCustom", "faq_open");
+					w.gtag?.("event", "faq_open");
+				} catch {
+					/* tracking opcional */
+				}
+			});
+		});
+</script>

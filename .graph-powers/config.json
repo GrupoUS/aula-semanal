@@ -1,0 +1,134 @@
+{
+  "$schema": "./config.schema.json",
+  "project": {
+    "name": "aula-semanal",
+    "displayName": "Na Mesa com Sacha — Grupo US",
+    "parentBrand": "Grupo US · Dra. Sacha Gualberto",
+    "purpose": "Landing de inscrição para aulas semanais gratuitas com Dra. Sacha Gualberto, toda terça-feira no Zoom. Profissionais de Saúde Estética e HOF.",
+    "stack": "astro-static-tailwindv4",
+    "stagingUrl": "http://localhost:4321",
+    "productionUrl": "https://aulaotb.gpus.com.br",
+    "locale": "pt-BR"
+  },
+  "git": {
+    "workBranch": "main",
+    "protectedBranches": [
+      "main"
+    ],
+    "optInPrefix": "AULAOTB"
+  },
+  "autonomy": {
+    "_comment": "level `autonomous` libera bashDefault e cleanup — e so isso. Os tres gates de git ficam em `ask` de proposito: a invariante 9 (main-only, deploy/push so quando pedido) exige AULAOTB_ALLOW_COMMIT=1 / AULAOTB_ALLOW_PUSH_MAIN=1 inline no comando. allowPackageManagers torna a invariante `Bun only` executavel: npm/yarn/pnpm passam a ser negados pelo smart_bash_approver em vez de apenas desaconselhados.",
+    "level": "autonomous",
+    "destructiveFloor": true,
+    "git": {
+      "commit": "ask",
+      "push": "ask",
+      "protectedBranch": "ask"
+    },
+    "allowPackageManagers": [
+      "bun",
+      "bunx"
+    ]
+  },
+  "content": {
+    "productSlug": "aula-semanal",
+    "productJson": "src/content/products/aula-semanal.json",
+    "ogImage": "/og/aula-semanal.png",
+    "anchors": [
+      "#inscricao",
+      "#aula",
+      "#autoridade"
+    ],
+    "legalRoutes": [
+      "/termos",
+      "/politica-de-privacidade"
+    ],
+    "sections": {
+      "hero": "",
+      "learn": "#aula",
+      "authority": "#autoridade",
+      "form": "#inscricao"
+    }
+  },
+  "lead": {
+    "leadFlow": "form-to-sheets",
+    "sdrName": "Laura",
+    "whatsappGreeting": "Olá, Laura!",
+    "whatsappHelper": "src/lib/whatsapp.ts",
+    "formComponent": "src/components/landing/RegistrationForm.astro",
+    "endpointEnv": "PUBLIC_FORM_ENDPOINT",
+    "leadTable": "planilha:leads"
+  },
+  "tracking": {
+    "ga4Env": "PUBLIC_GA4_ID",
+    "pixelEnv": "PUBLIC_FB_PIXEL_ID",
+    "wired": true
+  },
+  "paths": {
+    "backendRoot": "",
+    "frontendRoot": "src",
+    "schemaRoot": "src/content.config.ts",
+    "stylesRoot": "src/styles",
+    "componentsRoot": "src/components",
+    "contentRoot": "src/content",
+    "libRoot": "src/lib"
+  },
+  "tooling": {
+    "packageManager": "bun",
+    "buildTool": "astro",
+    "typeChecker": "astro-check",
+    "linter": "biome",
+    "testRunner": null,
+    "deployer": "vercel-hybrid",
+    "frontendFramework": "astro+react-islands",
+    "database": "google-sheets",
+    "orm": "apps-script-webapp",
+    "commands": {
+      "typeCheck": "./node_modules/.bin/astro check",
+      "lint": "bun run lint",
+      "format": "bun run lint:fix",
+      "build": "bun run build"
+    }
+  },
+  "gates": {
+    "advisory": true,
+    "lighthouse": {
+      "performance": 95,
+      "accessibility": 95,
+      "bestPractices": 95,
+      "seo": 95
+    },
+    "lcp": 2500,
+    "cls": 0,
+    "inp": 200,
+    "initialJsKb": 50
+  },
+  "graphGuardrails": {
+    "maxSpawnsPerSession": 25,
+    "maxRoundsPerAgent": 8
+  },
+  "protectedFiles": {
+    "_comment": "O hook PreToolUse(Edit|Write) do graph-powers casa `exact` pelo BASENAME (PurePath(file_path).name). Entrada com caminho, tipo 'src/lib/whatsapp.ts', NUNCA casa — por isso os nomes puros abaixo. ATENCAO: _config.py::_deep_merge substitui arrays por inteiro, nao concatena — omitir `.git`/`node_modules`/`.env` aqui APAGA os defaults do plugin em vez de herda-los, e foi por isso que eles estao repetidos explicitamente.",
+    "exact": [
+      "astro.config.mjs",
+      "package.json",
+      "tsconfig.json",
+      "biome.json",
+      "lefthook.yml",
+      "whatsapp.ts",
+      "content.config.ts"
+    ],
+    "segments": [
+      ".git",
+      "node_modules"
+    ],
+    "contains": [
+      ".env",
+      "bun.lock"
+    ]
+  },
+  "rulesDir": ".claude/rules",
+  "agentsFile": "AGENTS.md",
+  "claudeMdFile": ".claude/CLAUDE.md"
+}

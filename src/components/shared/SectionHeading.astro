@@ -1,0 +1,59 @@
+---
+import SectionPlate from "./SectionPlate.astro";
+
+interface Props {
+	title: string;
+	subtitle?: string;
+	align?: "left" | "center" | "right";
+	light?: boolean;
+	/** Índice estrutural da seção (2 → "02"). Renderiza a placa crimson que dá
+	 *  à página uma espinha numerada contínua. NÃO é copy de produto. */
+	index?: number;
+	/** Rótulo curto ao lado da placa. Copy — vem do JSON, nunca do componente. */
+	eyebrow?: string;
+}
+
+const {
+	title,
+	subtitle,
+	align = "center",
+	light = true,
+	index,
+	eyebrow,
+} = Astro.props;
+
+const alignConfig = {
+	left: { text: "text-left", items: "items-start", margin: "mr-auto" },
+	center: { text: "text-center", items: "items-center", margin: "mx-auto" },
+	right: { text: "text-right", items: "items-end", margin: "ml-auto" },
+} as const;
+
+const a = alignConfig[align];
+const titleColor = light ? "text-text-primary" : "text-navy";
+---
+
+<div class:list={["flex flex-col gap-4", a.items, a.text]} data-reveal="up">
+	{index != null && <SectionPlate index={index} eyebrow={eyebrow} align={align} />}
+
+	{/* text-h2 já carrega line-height e letter-spacing pelo @theme — nada de
+	    corrente ad-hoc de tamanho/tracking aqui. */}
+	<h2 class:list={["font-display text-h2 font-extrabold text-balance", titleColor]}>
+		{title}
+	</h2>
+
+	{/* Sem filete decorativo: a troca de banda entre seções é o separador
+	    primário do canon OTB. */}
+
+	{
+		subtitle && (
+			<p
+				class:list={[
+					"text-text-secondary text-lg md:text-xl leading-relaxed max-w-prose text-pretty",
+					a.margin,
+				]}
+			>
+				{subtitle}
+			</p>
+		)
+	}
+</div>

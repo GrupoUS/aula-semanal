@@ -1,0 +1,24 @@
+# Padroes SEM barra inicial casam em QUALQUER nivel, nao so na raiz. Foi assim
+# que `scripts` apagou `src/scripts/` no upload e quebrou o build na Vercel
+# (`Could not resolve "../scripts/motion.ts"`) com o build local verde — o
+# .vercelignore nao vale para `bun run build`. Pasta de tooling da raiz leva
+# barra inicial; padrao de artefato (node_modules, *.log) segue solto de
+# proposito, porque ali o casamento em qualquer nivel e o que se quer.
+node_modules
+.astro
+dist
+.cache
+.env
+.env.*
+!.env.example
+/.claude
+/.graph-powers
+/.planning
+/docs
+/evals
+/scripts
+*.log
+.DS_Store
+Thumbs.db
+.vscode
+.idea

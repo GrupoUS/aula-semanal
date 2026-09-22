@@ -1,0 +1,39 @@
+---
+import { formatEditorialIndex } from "../../lib/text";
+
+/**
+ * Placa numerada de seção + rótulo — a espinha visual contínua da página
+ * (registro OTB v2). Crimson é estrutura (índice), nunca CTA.
+ *
+ * `aria-hidden` no numeral: a numeração é orientação visual; o leitor de tela
+ * já navega a página pelos próprios <h2>.
+ */
+interface Props {
+	index: number;
+	/** Rótulo curto ao lado da placa. Copy — vem do JSON, nunca do componente. */
+	eyebrow?: string;
+	align?: "left" | "center" | "right";
+	class?: string;
+}
+
+const { index, eyebrow, align = "left", class: className } = Astro.props;
+
+const justify = {
+	left: "justify-start",
+	center: "justify-center",
+	right: "justify-end",
+} as const;
+---
+
+<div class:list={["flex items-center gap-4", justify[align], className]}>
+	<span class="section-plate rounded-plate" aria-hidden="true">
+		{formatEditorialIndex(index)}
+	</span>
+	{
+		eyebrow && (
+			<span class="text-text-muted text-xs font-semibold uppercase tracking-[0.26em]">
+				{eyebrow}
+			</span>
+		)
+	}
+</div>

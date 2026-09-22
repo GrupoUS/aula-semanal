@@ -1,0 +1,65 @@
+---
+// Esta é a seção da OFERTA (o OTB em Boston), não da aula — por isso a foto
+// aqui é do acervo das turmas anteriores em Boston, e não da Dra. Sacha.
+// A turma inteira na escadaria é a prova social mais direta do acervo.
+import bostonPhoto from "../../assets/images/otb/gallery/turma-escadaria.jpg";
+import { splitHighlight } from "../../lib/text";
+import SectionPhoto from "../shared/SectionPhoto.astro";
+import SectionPlate from "../shared/SectionPlate.astro";
+
+interface Props {
+	/** Número da placa desta seção. Vem de `index.astro`, que conta só as
+	 *  seções realmente renderizadas — hardcoded aqui, uma seção opcional
+	 *  ausente abriria um buraco na espinha (…03, 05…). */
+	plate: number;
+	nextStep: {
+		headline: string;
+		highlight?: string;
+		paragraphs: string[];
+	};
+}
+
+const { plate, nextStep } = Astro.props;
+
+const { pre, mid, post } = splitHighlight(
+	nextStep.headline,
+	nextStep.highlight,
+);
+---
+
+<section
+	id="proximo-passo"
+	class="band-deep relative isolate overflow-hidden scroll-mt-24 px-4 py-section sm:px-6 lg:px-8"
+>
+	<SectionPhoto
+		src={bostonPhoto}
+		position="object-[50%_40%]"
+		overlay="navy"
+		opacity="opacity-80"
+		motion="parallax"
+	/>
+
+	<div class="glass-card mx-auto max-w-2xl rounded-plate p-8 text-center md:p-12">
+		<SectionPlate index={plate} align="center" class="mb-6" />
+
+		{/* mask em vez de scale no card inteiro: o clip-path revela sem travar
+		    transform, então o glass e o parallax da foto atrás seguem livres. */}
+		<h2
+			class="font-display text-h2 font-extrabold text-balance text-text-primary"
+			data-reveal="mask"
+		>
+			{pre}{mid && <span class="text-gold">{mid}</span>}{post}
+		</h2>
+		<div class="mx-auto mt-6 max-w-xl space-y-4">
+			{nextStep.paragraphs.map((p, i) => (
+				<p
+					class="text-lg leading-relaxed text-pretty text-text-secondary"
+					data-reveal="up"
+					data-reveal-delay={String(i + 1)}
+				>
+					{p}
+				</p>
+			))}
+		</div>
+	</div>
+</section>

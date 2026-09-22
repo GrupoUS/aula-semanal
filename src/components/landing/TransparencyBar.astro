@@ -1,0 +1,44 @@
+---
+// Barra de transparência antes do CTA final. Cada item é um recorte
+// verificável do `legal.disclaimer` — nada aqui pode afirmar algo que não
+// esteja lá. Integridade como elemento de conversão, não como letra miúda.
+import Icon from "../shared/Icon.astro";
+
+interface Props {
+	transparency: {
+		items: Array<{ icon: string; title: string; body: string }>;
+	};
+}
+
+const { transparency } = Astro.props;
+---
+
+<section
+	class="band-deep border-t border-gold/15 px-4 py-section-tight sm:px-6 lg:px-8"
+	aria-label="Transparência e integridade"
+>
+	<ul
+		class="mx-auto grid max-w-7xl list-none grid-cols-1 gap-8 md:grid-cols-3"
+		role="list"
+	>
+		{
+			transparency.items.map((item, i) => (
+				<li
+					class="flex items-start gap-4"
+					data-reveal="up"
+					data-reveal-delay={String(i + 1)}
+				>
+					<Icon name={item.icon} class="mt-0.5 h-[18px] w-[18px] shrink-0 text-gold" />
+					<span>
+						<span class="block text-sm font-semibold leading-snug text-text-primary">
+							{item.title}
+						</span>
+						<span class="text-text-muted mt-1.5 block text-[0.8125rem] leading-relaxed">
+							{item.body}
+						</span>
+					</span>
+				</li>
+			))
+		}
+	</ul>
+</section>

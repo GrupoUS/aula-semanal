@@ -1,0 +1,32 @@
+---
+/**
+ * Branded editorial eyebrow: a short gold hairline rule + uppercase,
+ * wide-tracked gold label. Shared primitive so the Hero, Faculty and any
+ * future section express the same "label above the headline" treatment from
+ * one place. Forwards arbitrary attributes (e.g. `data-reveal`) to the span.
+ */
+interface Props {
+	align?: "left" | "center" | "right";
+	class?: string;
+}
+
+const { align = "left", class: className, ...rest } = Astro.props;
+
+const justify = {
+	left: "justify-start",
+	center: "justify-center",
+	right: "justify-end",
+} as const;
+---
+
+<span
+	class:list={[
+		"inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.24em] text-gold",
+		justify[align],
+		className,
+	]}
+	{...rest}
+>
+	<span class="h-px w-8 bg-gold" aria-hidden="true"></span>
+	<slot />
+</span>

@@ -1,0 +1,2765 @@
+/* stylelint-disable at-rule-no-unknown -- Tailwind v4 directives (@theme, @utility) */
+@import "tailwindcss";
+
+@source not "../../.claude";
+@source not "../../docs";
+@source not "../../evals";
+
+/* ===== Na Mesa com Sacha — navy, champagne e papel ===== */
+
+@theme {
+	--color-paper: #f7f4ee;
+	--color-paper-card: #fffdf9;
+	--color-paper-ink: #142d3b;
+	--color-paper-muted: #4d626e;
+	--color-paper-line: #d9d2c7;
+	--color-input: #fffdf9;
+	--color-input-muted: #54636c;
+	--font-editorial: Georgia, "Times New Roman", serif;
+	/* Navy Palette.
+	   navy-deep e navy-band existem para BANDEAR a página: a troca de banda é
+	   o separador primário entre seções (no lugar de filetes decorativos). */
+	--color-navy-deep: #061724;
+	--color-navy: #0b2434;
+	--color-navy-band: #112f40;
+	--color-navy-light: #17394a;
+	--color-navy-lighter: #36576a;
+
+	/* Ink — canvas do registro v2 (modelo de design OTB USA v2).
+	   Ink substitui navy como FUNDO DE BANDA; navy desce para superfície de
+	   card, glass e cor-base de sombra. Não misturar os dois papéis: fundo de
+	   seção é sempre ink-*, superfície elevada é sempre navy-*. */
+	--color-ink-950: #081c2a;
+	--color-ink-900: #0b2434;
+	--color-ink-800: #112f40;
+	--color-ink-750: #0c2738;
+
+	/* Gold Palette */
+	--color-gold: #d8b88a;
+	--color-gold-light: #efd6ad;
+	--color-gold-dark: #ac8655;
+
+	/* Crimson / USA accent — posicionamento Boston · Estados Unidos.
+	   Gold permanece primário de CTA/foco. Papéis permitidos (6, e só):
+	   placa numerada de seção, gradiente da barra de progresso, anel pulsante
+	   da contagem, wash radial de seção, numeral de lista, faixa de
+	   credenciais. Nunca cor de CTA nem de erro. */
+	--color-crimson: #a51c30;
+	--color-crimson-bright: #c8102e;
+	--color-crimson-dark: #6e1423;
+
+	/* Text.
+	   text-secondary é o body sobre fundo escuro; text-muted desce para
+	   metadado (data, rótulo pequeno) — DESIGN.md § 2. */
+	--color-text-primary: #fafaf9;
+	--color-text-secondary: #b8c0d0;
+	--color-text-muted: #94a3b8;
+
+	/* Typography.
+	   `--font-display` é a face de título (Sora, geometric grotesk). Não há
+	   serifa no sistema: título e corpo são ambos sans, separados por face e
+	   peso em vez de classificação. */
+	--font-display: var(--font-sora), system-ui, sans-serif;
+	--font-sans: var(--font-inter), system-ui, sans-serif;
+
+	/* Escala fluida — tracking mais fechado que a era Playfair: Sora é uma
+	   grotesca geométrica em 800 no display e precisa de letter-spacing
+	   negativo para não ler solta acima de 5rem. */
+	--text-display: clamp(2.125rem, 1.2rem + 4.2vw, 5.25rem);
+	--text-display--line-height: 1;
+	--text-display--letter-spacing: -0.035em;
+
+	--text-h1: clamp(2rem, 1.15rem + 3.6vw, 4.25rem);
+	--text-h1--line-height: 1.04;
+	--text-h1--letter-spacing: -0.03em;
+
+	/* Headline da primeira dobra. Degrau próprio abaixo de h1 porque a manchete
+	   do Hero tem 74 caracteres: em `--text-h1` ela fechava 7 linhas e comia a
+	   dobra inteira, deixando o plate duplo (Sacha + Carol) do tamanho de
+	   thumbnail ao lado dela. ~0.82× do teto de h1 devolve proporção sem tirar do
+	   h1 o posto de maior tipo da página. `text-h1` segue intocado para blocos de
+	   manchete curta (FinalCTA). */
+	--text-hero: clamp(1.875rem, 1.1rem + 3vw, 3.5rem);
+	--text-hero--line-height: 1.06;
+	--text-hero--letter-spacing: -0.03em;
+
+	--text-h2: clamp(1.75rem, 1.15rem + 2.4vw, 3.25rem);
+	--text-h2--line-height: 1.06;
+	--text-h2--letter-spacing: -0.03em;
+
+	--text-h3: clamp(1.125rem, 1rem + 0.5vw, 1.5rem);
+	--text-h3--line-height: 1.25;
+	--text-h3--letter-spacing: -0.02em;
+
+	/* Nome próprio sob retrato (corpo docente). Degrau que faltava entre h3 e
+	   h2: ×1.25 sobre o teto de h3 e ×0.58 do teto de h2, mantendo a razão ≥1.25
+	   entre passos da escala. O nome carrega a autoridade da seção e em text-h3
+	   ficava do tamanho de um rótulo ao lado de uma chapa de 280px. */
+	--text-name: clamp(1.25rem, 1.05rem + 0.85vw, 1.875rem);
+	--text-name--line-height: 1.15;
+	--text-name--letter-spacing: -0.02em;
+
+	--text-lede: clamp(1.0625rem, 1rem + 0.45vw, 1.375rem);
+	--text-lede--line-height: 1.6;
+
+	--text-body: 1rem;
+	--text-body--line-height: 1.65;
+
+	--text-meta: 0.8125rem;
+	--text-meta--line-height: 1.5;
+
+	/* Kicker — respeita o piso de 12px do DESIGN.md § 4. */
+	--text-kicker: 0.75rem;
+	--text-kicker--line-height: 1.2;
+	--tracking-kicker: 0.28em;
+
+	/* Segundo degrau de tracking para rótulo. `--tracking-kicker` foi desenhado
+	   para eyebrow de 1–3 palavras; em rótulo longo (ex.: área de docente com 36
+	   caracteres) 0.28em quebra o reconhecimento de palavra — o olho lê letra a
+	   letra. 0.08em mantém a leitura de rótulo em caixa alta sem desmontar as
+	   palavras. O token do eyebrow fica intocado. */
+	--tracking-label: 0.08em;
+
+	/* Ritmo vertical */
+	--spacing-section: clamp(4rem, 2rem + 7vw, 9rem);
+	--spacing-section-tight: clamp(3rem, 1.75rem + 4.5vw, 6rem);
+	--spacing-block: clamp(2rem, 1.25rem + 3vw, 4rem);
+
+	/* Motion */
+	--ease-editorial: cubic-bezier(0.16, 1, 0.3, 1);
+	--ease-exit: cubic-bezier(0.4, 0, 1, 1);
+	--duration-hover: 160ms;
+	--duration-reveal: 520ms;
+	--stagger-step: 70ms;
+
+	/* Profundidade — 3 tiers. shadow-halo-gold substitui a receita do CTA
+	   duplicada em Hero, formulário e WhatsAppFloatingButton. */
+	--shadow-panel: 0 18px 48px -24px
+		color-mix(in srgb, var(--color-ink-950) 85%, transparent);
+	--shadow-lift: 0 24px 60px -20px
+		color-mix(in srgb, var(--color-ink-950) 90%, transparent);
+	--shadow-halo-gold: 0 18px 45px -12px
+		color-mix(in srgb, var(--color-gold) 55%, transparent);
+	--shadow-rim: inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+
+	/* Forma — fotografia é retilínea; só o chrome interativo é redondo. */
+	--radius-plate: 2px;
+
+	/* --- Extras desta landing (não existem no canon do site do produto) --- */
+
+	/* WhatsApp (CTA secundário) e papéis de status. Status é sempre
+	   cor + ícone + texto, nunca cor sozinha. */
+	--color-whatsapp: #25d366;
+	--color-whatsapp-hover: #20bd5a;
+	--color-error: #ff9e9e;
+	--color-success: #22c55e;
+
+	/* Durações que o canon não declara: condensação do header no scroll e
+	   abertura do acordeão do FAQ. */
+	--duration-page: 200ms;
+	--duration-accordion: 250ms;
+	--ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== Section banding =====
+   A troca tonal entre seções é o separador primário (no lugar de filetes). */
+
+@utility band-base {
+	background-color: var(--color-ink-900);
+}
+
+@utility band-alt {
+	background-color: var(--color-ink-800);
+}
+
+@utility band-deep {
+	background-color: var(--color-ink-950);
+}
+
+/* ===== Base Styles ===== */
+
+/* ===== Escala de empilhamento + medidas do chrome inferior =====
+   Fora do @theme de propósito: o Tailwind v4 poda variáveis de tema não
+   referenciadas por utility, e `--bottom-stack-h` é MEDIDA DE RUNTIME
+   (escrita pelo motion.ts), não token de design.
+
+   Antes havia z-40/z-50/z-[60] soltos em cinco arquivos e a ordem só era
+   descobrível relendo todos. Regra nova: header e chrome inferior não
+   disputam — eles não podem se sobrepor por construção (ver #bottom-chrome).
+   `.skip-link` fica FORA da escala, com 9999: ele tem que estar acima de tudo
+   (WCAG 2.4.1, primeiro focável da página). */
+:root {
+	--z-header: 50;
+	--z-chrome: 55; /* pilha inferior: aviso de cookies + CTA fixo */
+	--z-menu: 60; /* diálogo do menu mobile */
+	--z-progress: 70; /* fio de progresso — pointer-events: none */
+
+	--bottom-stack-h: 0px;
+	--safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Sem JS não há medição: reserva a altura histórica da barra, e só nas páginas
+   que de fato têm chrome inferior. */
+html:not(.js).has-bottom-chrome {
+	--bottom-stack-h: 5rem;
+}
+
+html {
+	scroll-behavior: smooth;
+	/* Faz o PRÓPRIO navegador respeitar a pilha: vale para âncoras (#inscricao),
+	   scrollIntoView e — o que ninguém lembra — a rolagem automática do Tab
+	   (sequential focus navigation scrolling). É o que garante "nunca
+	   inacessível" sem uma linha de JS. */
+	scroll-padding-bottom: calc(
+		var(--bottom-stack-h) +
+		var(--safe-bottom) +
+		1rem
+	);
+	scroll-padding-top: 5rem;
+}
+
+body {
+	font-family: var(--font-sans);
+	background-color: var(--color-ink-950);
+	color: var(--color-text-primary);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	/* Reserva medida, substituindo o `pb-[calc(5rem+env(...))]` que o Layout
+	   aplicava só quando `hasBottomBar` era passado. O padding cresce o scroll
+	   máximo em exatamente a altura da pilha, então nada do fim do documento
+	   fica embaixo dela. */
+	padding-bottom: calc(var(--bottom-stack-h) + var(--safe-bottom));
+}
+
+/* ===== Custom Utilities ===== */
+
+/* Consolidated tint utilities — replace the highest-frequency inline color-mix
+   tokens used across landing components. Restrained set; exotic one-off tints
+   stay inline by intent. */
+
+@utility bg-gold-tint-10 {
+	background-color: color-mix(in srgb, var(--color-gold) 10%, transparent);
+}
+
+@utility bg-navy-soft-70 {
+	background-color: color-mix(
+		in srgb,
+		var(--color-navy-light) 70%,
+		transparent
+	);
+}
+
+@utility border-gold-mid-35 {
+	border-color: color-mix(in srgb, var(--color-gold) 35%, transparent);
+}
+
+@utility gold-glow {
+	box-shadow: 0 0 20px color-mix(in srgb, var(--color-gold) 30%, transparent);
+}
+
+@utility glass-card {
+	background:
+		linear-gradient(
+			180deg,
+			color-mix(in srgb, var(--color-navy-light) 92%, white 4%) 0%,
+			color-mix(in srgb, var(--color-navy) 92%, transparent) 100%
+		),
+		radial-gradient(
+			circle at top left,
+			color-mix(in srgb, var(--color-gold) 14%, transparent) 0%,
+			transparent 44%
+		);
+	border: 1px solid color-mix(in srgb, var(--color-gold) 20%, transparent);
+	backdrop-filter: blur(18px) saturate(125%);
+	box-shadow:
+		0 0 20px color-mix(in srgb, var(--color-gold) 6%, transparent),
+		0 24px 70px color-mix(in srgb, var(--color-navy) 45%, transparent),
+		inset 0 1px 0 color-mix(in srgb, white 8%, transparent);
+}
+
+/* ===== Focus States (Accessibility) ===== */
+
+.skip-link {
+	position: fixed;
+	left: 0.75rem;
+	top: 0.75rem;
+	z-index: 9999;
+	padding: 0.5rem 1rem;
+	background-color: var(--color-gold);
+	color: var(--color-navy);
+	font-weight: 600;
+	font-size: 0.875rem;
+	border-radius: 0.5rem;
+	transform: translateY(-200%);
+	transition: transform 0.2s ease;
+}
+
+.skip-link:focus-visible {
+	transform: translateY(0);
+	outline: 2px solid var(--color-navy);
+	outline-offset: 2px;
+}
+
+:focus-visible {
+	outline: 2px solid var(--color-gold);
+	outline-offset: 2px;
+}
+
+/* Focus ring for gold-background interactives (primary CTAs, header CTA,
+   sticky bar). A plain gold ring on a gold surface is gold-on-gold and fails
+   WCAG 2.4.11/2.4.13 focus visibility. Swap to a navy ring + a gold outer halo
+   so the focus indicator is high-contrast against the gold fill itself.
+   Token-only; no layout properties. */
+@utility focus-ring-on-gold {
+	&:focus-visible {
+		outline: 2px solid var(--color-navy);
+		outline-offset: 2px;
+		box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-gold) 90%, white 10%);
+	}
+}
+
+.btn-primary:focus-visible {
+	outline: 2px solid var(--color-navy);
+	outline-offset: 2px;
+	box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-gold) 90%, white 10%);
+}
+
+/* ===== Reduced Motion ===== */
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+
+	.skip-link {
+		transition: none;
+	}
+}
+
+/* ===== Selection ===== */
+
+::selection {
+	background-color: color-mix(in srgb, var(--color-gold) 30%, transparent);
+	color: var(--color-text-primary);
+}
+
+/* ===== Scroll-Reveal Animations ===== */
+
+@keyframes reveal-up {
+	from {
+		opacity: 0;
+		transform: translateY(18px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes reveal-left {
+	from {
+		opacity: 0;
+		transform: translateX(-18px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+@keyframes reveal-right {
+	from {
+		opacity: 0;
+		transform: translateX(18px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+@keyframes reveal-scale {
+	from {
+		opacity: 0;
+		transform: scale(0.96);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+/* reveal mask/wipe — clip-path revela a caixa em vez de deslocá-la. Usado em
+   H2 de seção e placas full-bleed (registro v2). `mask` sobe de baixo,
+   `wipe` corre da esquerda. Nada de transform: o hover/tilt do elemento
+   continua livre depois (docs/motion-depth-playbook.md § 3.1 e § 3.5). */
+@keyframes reveal-mask {
+	from {
+		opacity: 0.25;
+		clip-path: inset(0 0 100% 0);
+	}
+	to {
+		opacity: 1;
+		clip-path: inset(0 0 0 0);
+	}
+}
+
+@keyframes reveal-wipe {
+	from {
+		opacity: 0.25;
+		clip-path: inset(0 100% 0 0);
+	}
+	to {
+		opacity: 1;
+		clip-path: inset(0 0 0 0);
+	}
+}
+
+/* Cascata de entrada no load (data-enter). Distinta do reveal: não espera
+   IntersectionObserver, dispara no primeiro frame para o conteúdo do hero. */
+@keyframes enter-rise {
+	from {
+		opacity: 0;
+		transform: translateY(26px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+/* Marquee — o trilho anda metade da própria largura porque o JS duplica os
+   filhos; a emenda cai exatamente no ponto de reinício. */
+@keyframes marquee-scroll {
+	from {
+		transform: translate3d(0, 0, 0);
+	}
+	to {
+		transform: translate3d(-50%, 0, 0);
+	}
+}
+
+/* Sweep de luz no CTA primário. */
+@keyframes cta-shine {
+	0% {
+		opacity: 0;
+		transform: translateX(0) skewX(-18deg);
+	}
+	9% {
+		opacity: 0.85;
+	}
+	52%,
+	100% {
+		opacity: 0;
+		transform: translateX(440%) skewX(-18deg);
+	}
+}
+
+/* Anel pulsante do ponto de urgência (contagem). */
+@keyframes ping-ring {
+	0% {
+		opacity: 0.9;
+		transform: scale(0.55);
+	}
+	70%,
+	100% {
+		opacity: 0;
+		transform: scale(2);
+	}
+}
+
+@keyframes float {
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(-12px);
+	}
+}
+
+@keyframes gold-halo-pulse {
+	0%,
+	100% {
+		box-shadow: 0 0 30px color-mix(in srgb, var(--color-gold) 32%, transparent);
+	}
+	50% {
+		box-shadow:
+			0 0 44px color-mix(in srgb, var(--color-gold) 52%, transparent),
+			0 0 64px color-mix(in srgb, var(--color-gold) 22%, transparent);
+	}
+}
+
+/* Subtle scroll-hint bounce — transform/opacity only. */
+@keyframes scroll-hint {
+	0%,
+	100% {
+		transform: translateY(0);
+		opacity: 0.55;
+	}
+	50% {
+		transform: translateY(6px);
+		opacity: 0.95;
+	}
+}
+
+@utility scroll-hint-bounce {
+	animation: scroll-hint 2.4s ease-in-out infinite;
+	will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.scroll-hint-bounce {
+		animation: none !important;
+		opacity: 0.7;
+	}
+}
+
+/* Disable infinite animations on mobile to save GPU */
+@media (max-width: 768px) {
+	.gold-pulse-glow::after {
+		animation: none;
+		opacity: 0.7;
+	}
+	.float-gentle {
+		animation: none;
+	}
+	.landing-mesh-bg {
+		animation: none;
+	}
+}
+
+/* Progressive enhancement: pre-reveal state applies only when the inline
+   `<html class="js">` flag is present. If the script never runs (network
+   error, blocked, parser delay), content stays visible instead of stuck
+   at opacity:0 on the navy background. */
+.js [data-reveal] {
+	opacity: 0;
+}
+
+/* Intencionalmente SEM `will-change` permanente nos elementos revelados:
+   mantê-lo em dezenas de cards promove camadas de composição demais, o
+   compositor thrasha e a tela pisca no hover (pior ainda em cards com
+   backdrop-filter). O reveal é one-shot curto — o navegador compõe bem sem
+   o hint. Ver docs/motion-depth-playbook.md.
+
+   Propriedades longhand (não o shorthand `animation`) para que o
+   animation-delay do stagger não seja zerado — era isso que obrigava o
+   `!important` da versão anterior.
+
+   fill-mode: BACKWARDS, nunca `forwards`. `forwards` congela o transform do
+   último keyframe no elemento e mascara hover/lift/parallax depois do reveal
+   (.claude/rules/stability.md § Debug triage matrix). Com `backwards` o
+   estado inicial vale durante o delay e, ao terminar, o elemento volta às
+   próprias regras — o opacity final vem do próprio `.revealed`. */
+.js [data-reveal].revealed {
+	opacity: 1;
+	animation-duration: var(--duration-reveal);
+	animation-timing-function: var(--ease-editorial);
+	animation-fill-mode: backwards;
+	animation-delay: calc(var(--reveal-index, 0) * var(--stagger-step));
+}
+
+.js [data-reveal="up"].revealed {
+	animation-name: reveal-up;
+}
+
+.js [data-reveal="left"].revealed {
+	animation-name: reveal-left;
+}
+
+.js [data-reveal="right"].revealed {
+	animation-name: reveal-right;
+}
+
+.js [data-reveal="scale"].revealed {
+	animation-name: reveal-scale;
+}
+
+/* mask/wipe correm mais lentos que os reveals de deslocamento — o clip-path
+   percorre a altura inteira da caixa e 520ms lê apressado. */
+.js [data-reveal="mask"].revealed {
+	animation-name: reveal-mask;
+	animation-duration: 1s;
+}
+
+.js [data-reveal="wipe"].revealed {
+	animation-name: reveal-wipe;
+	animation-duration: 1s;
+}
+
+/* Stagger: `data-reveal-delay="N"` apenas seta --reveal-index. Sem teto
+   rígido — para listas longas basta style="--reveal-index: N" inline. */
+[data-reveal-delay="1"] {
+	--reveal-index: 1;
+}
+[data-reveal-delay="2"] {
+	--reveal-index: 2;
+}
+[data-reveal-delay="3"] {
+	--reveal-index: 3;
+}
+[data-reveal-delay="4"] {
+	--reveal-index: 4;
+}
+[data-reveal-delay="5"] {
+	--reveal-index: 5;
+}
+[data-reveal-delay="6"] {
+	--reveal-index: 6;
+}
+[data-reveal-delay="7"] {
+	--reveal-index: 7;
+}
+[data-reveal-delay="8"] {
+	--reveal-index: 8;
+}
+[data-reveal-delay="9"] {
+	--reveal-index: 9;
+}
+[data-reveal-delay="10"] {
+	--reveal-index: 10;
+}
+
+/* Reveal: visible immediately when user prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+	.js [data-reveal],
+	.js [data-reveal].revealed {
+		opacity: 1;
+		animation: none !important;
+		transform: none;
+		will-change: auto;
+	}
+}
+
+/* ===== Primitivas de movimento do registro v2 =====
+   Contrato de atributos implementado em src/scripts/motion.ts. Todo bloco
+   aqui é gated por `.js` (progressive enhancement) e neutralizado sob
+   prefers-reduced-motion — requisito duro, não advisory. */
+
+/* (a) data-enter — cascata de entrada no load. O índice vem do próprio
+   atributo; o JS só acrescenta `.entered` no primeiro frame. */
+.js [data-enter] {
+	opacity: 0;
+}
+
+/* O delay conta a partir do índice 1 (e não de 1×step): o primeiro item da
+   cascata é o candidato a LCP do hero, e todo milissegundo em opacity 0 é
+   milissegundo que o Chrome NÃO conta como pintado. Passo de 50ms mantém a
+   cascata legível com o menor custo de LCP possível. */
+.js [data-enter].entered {
+	opacity: 1;
+	animation-name: enter-rise;
+	animation-duration: 560ms;
+	animation-timing-function: var(--ease-editorial);
+	animation-fill-mode: backwards;
+	animation-delay: calc((var(--enter-index, 1) - 1) * 50ms);
+}
+
+[data-enter="1"] {
+	--enter-index: 1;
+}
+[data-enter="2"] {
+	--enter-index: 2;
+}
+[data-enter="3"] {
+	--enter-index: 3;
+}
+[data-enter="4"] {
+	--enter-index: 4;
+}
+[data-enter="5"] {
+	--enter-index: 5;
+}
+[data-enter="6"] {
+	--enter-index: 6;
+}
+[data-enter="7"] {
+	--enter-index: 7;
+}
+[data-enter="8"] {
+	--enter-index: 8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.js [data-enter],
+	.js [data-enter].entered {
+		opacity: 1;
+		animation: none !important;
+		transform: none;
+	}
+}
+
+/* (b) data-marquee — sem JS (ou sob reduced-motion) o trilho é uma lista que
+   quebra linha e fica legível; `.marquee-ready` só entra depois que o script
+   duplicou os filhos, então a animação nunca corre com metade vazia. */
+[data-marquee] {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	width: auto;
+}
+
+.js [data-marquee].marquee-ready {
+	flex-wrap: nowrap;
+	justify-content: flex-start;
+	width: max-content;
+	white-space: nowrap;
+	/* Padding lateral e `gap` só existem no estado empilhado (sem JS /
+	   reduced-motion). No trilho os dois quebram a emenda: o -50% do keyframe
+	   assume que a cópia começa exatamente onde o original termina, e tanto o
+	   padding quanto o gap entram na largura sem se repetir na cópia. O
+	   espaçamento vira margem do item, que acompanha cada cópia. */
+	padding-inline: 0;
+	gap: 0;
+	animation: marquee-scroll var(--marquee-dur, 34s) linear infinite;
+}
+
+.js [data-marquee].marquee-ready:hover,
+.js [data-marquee].marquee-ready:focus-within {
+	animation-play-state: paused;
+}
+
+.js [data-marquee].marquee-ready > * {
+	margin-inline-end: var(--marquee-gap, 2rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.js [data-marquee].marquee-ready {
+		flex-wrap: wrap;
+		justify-content: center;
+		width: auto;
+		white-space: normal;
+		animation: none;
+	}
+}
+
+/* (c) data-shine — sweep contínuo no CTA. Pseudo-elemento em vez do <span>
+   injetado do protótipo: mesmo efeito, zero nó extra e zero JS.
+   `::before` de propósito: `.btn-primary::after` já carrega o sweep de HOVER,
+   e disputar o mesmo pseudo-elemento com especificidade idêntica apagaria um
+   dos dois. `isolation: isolate` + `z-index: -1` fazem o brilho pintar acima
+   do fundo e abaixo do rótulo (playbook § 3.4). `overflow: hidden` recorta o
+   sweep, mas não a box-shadow do halo. */
+[data-shine] {
+	position: relative;
+	overflow: hidden;
+	isolation: isolate;
+}
+
+[data-shine]::before {
+	content: "";
+	position: absolute;
+	inset: 0 auto 0 -42%;
+	z-index: -1;
+	width: 34%;
+	pointer-events: none;
+	background: linear-gradient(
+		100deg,
+		transparent,
+		color-mix(in srgb, white 50%, transparent),
+		transparent
+	);
+	transform: translateX(0) skewX(-18deg);
+	animation: cta-shine 4.8s var(--ease-editorial) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	[data-shine]::before {
+		animation: none;
+		opacity: 0;
+	}
+}
+
+/* (d) data-tilt — o JS escreve o transform; aqui fica só a curva de retorno e
+   o contexto 3D. Sem `will-change` permanente (§ 3.3 do playbook) e sem
+   hover-lift concorrente no mesmo elemento (§ 3.5). */
+@media (pointer: fine) and (prefers-reduced-motion: no-preference) {
+	.js [data-tilt] {
+		transform-style: preserve-3d;
+		transition: transform 500ms var(--ease-editorial);
+	}
+
+	/* O tilt É o hover deste card. Sem isto, ao sair do card o script limpa o
+	   transform inline, o `:hover` do lift volta a valer por um frame e o card
+	   dá um pulo antes de assentar (playbook § 3.5). */
+	.js [data-tilt]:hover {
+		transform: none;
+	}
+}
+
+/* (e) data-hero-fade / data-parallax — o transform vem do script. A regra
+   existe para garantir que, sem JS, nada fique deslocado ou invisível. */
+[data-hero-fade],
+[data-parallax] {
+	transform: none;
+}
+
+/* (f) Anel pulsante de urgência — ponto crimson da contagem. */
+@utility ping-ring {
+	position: relative;
+}
+
+@utility ping-ring-dot {
+	position: absolute;
+	inset: 0;
+	border-radius: 9999px;
+	background-color: var(--color-crimson-bright);
+	animation: ping-ring 2.6s var(--ease-editorial) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.ping-ring-dot {
+		animation: none;
+		opacity: 0;
+	}
+}
+
+/* ===== (f2) Chrome inferior — pilha única =====
+   TODO elemento fixo ancorado embaixo mora AQUI DENTRO. Os filhos são blocos
+   em fluxo normal: pela caixa do CSS eles NÃO PODEM se sobrepor. Foi a
+   sobreposição aviso x barra x flutuante (offsets 5rem/5.5rem, quebrada duas
+   vezes) que motivou a pilha. Nenhum offset aqui: a garantia é estrutural,
+   não aritmética.
+
+   O `translateY(100%)` de antes tinha um efeito colateral que ninguém via: o
+   link do CTA fixo continuava FOCÁVEL fora da tela, então o Tab levava o foco
+   para um lugar invisível. As linhas colapsadas agora saem da ordem de
+   tabulação via `inert` (motion.ts) + `visibility: hidden`. */
+#bottom-chrome {
+	position: fixed;
+	inset-inline: 0;
+	bottom: 0;
+	z-index: var(--z-chrome);
+	display: flex;
+	flex-direction: column;
+	padding-bottom: var(--safe-bottom);
+	pointer-events: none; /* só as linhas visíveis interceptam ponteiro */
+}
+
+/* Colapso com a altura REAL da linha: 0fr -> 1fr. `display: none` mataria a
+   transição; `translateY` mentiria sobre a altura medida. */
+.chrome-row {
+	display: grid;
+	grid-template-rows: 0fr;
+	transition: grid-template-rows var(--duration-reveal, 300ms)
+		var(--ease-editorial, ease);
+}
+
+.chrome-row > .chrome-row-clip {
+	overflow: hidden;
+	min-height: 0;
+	visibility: hidden;
+	pointer-events: none;
+	transition: visibility 0s linear var(--duration-reveal, 300ms);
+}
+
+.chrome-row.is-visible {
+	grid-template-rows: 1fr;
+}
+
+.chrome-row.is-visible > .chrome-row-clip {
+	visibility: visible;
+	pointer-events: auto;
+	transition-delay: 0s;
+}
+
+/* Sem JS o CTA fixo nasce aberto (é conversão). O aviso de cookies NÃO: seus
+   botões dependem de localStorage, e aberto sem JS seria um banner morto
+   cobrindo a dobra. */
+html:not(.js) .chrome-row[data-chrome-row="cta"] {
+	grid-template-rows: 1fr;
+}
+
+html:not(.js) .chrome-row[data-chrome-row="cta"] > .chrome-row-clip {
+	visibility: visible;
+	pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.chrome-row,
+	.chrome-row > .chrome-row-clip {
+		transition: none;
+	}
+}
+
+/* (g) Placa numerada de seção — índice visual contínuo do registro v2.
+   Crimson é estrutura (nunca CTA); o numeral usa a face display. */
+@utility section-plate {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 2.625rem;
+	height: 2.625rem;
+	padding-inline: 0.625rem;
+	background-color: var(--color-crimson);
+	color: var(--color-text-primary);
+	font-family: var(--font-display);
+	font-weight: 700;
+	font-size: 0.875rem;
+	line-height: 1;
+	letter-spacing: 0.06em;
+	font-variant-numeric: tabular-nums;
+}
+
+/* ===== Numeral Reveal (editorial-spine accent) =====
+   Marked numerals (SectionHeading index, Learn card index) settle in AFTER
+   their [data-reveal] ancestor has revealed — a transform/opacity-only delight
+   accent. Progressive-enhancement gated: only hidden/animated when `.js` is
+   present; otherwise (JS off, <noscript>, parser delay) the numeral stays
+   fully visible. */
+@keyframes numeral-reveal {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.js [data-numeral-reveal] {
+	opacity: 0;
+}
+
+.js [data-reveal].revealed [data-numeral-reveal],
+.js [data-reveal].revealed[data-numeral-reveal] {
+	animation: numeral-reveal 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.18s forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.js [data-numeral-reveal],
+	.js [data-reveal].revealed [data-numeral-reveal] {
+		opacity: 1;
+		animation: none !important;
+		transform: none;
+		will-change: auto;
+	}
+}
+
+/* ===== POLISH MOTION (design-fix 7/7) ===== */
+
+/* (2) Hero focal gradient sweep — animate the clipped gold gradient's position
+   so the highlight word shimmers slowly. background-position is compositor-cheap
+   on text-clip; transform/opacity-class only. Continuous → mobile-paused +
+   reduced-motion-halted. */
+@keyframes gold-sweep {
+	0% {
+		background-position: 0% center;
+	}
+	100% {
+		background-position: -200% center;
+	}
+}
+
+@utility text-gradient-gold-sweep {
+	background: linear-gradient(
+		100deg,
+		var(--color-gold) 0%,
+		var(--color-gold-light) 25%,
+		var(--color-gold) 50%,
+		var(--color-gold-light) 75%,
+		var(--color-gold) 100%
+	);
+	background-size: 200% auto;
+	-webkit-background-clip: text;
+	background-clip: text;
+	/* Base sólida; a transparência entra sob `@supports` junto com
+	   `text-gradient-gold` (ver "Gradient Text" mais abaixo). Antes era
+	   `color: transparent` direto, e sem suporte a clip a palavra sumia. */
+	color: var(--color-gold);
+	animation: gold-sweep 6s linear infinite;
+	will-change: background-position;
+}
+
+/* (5) Event chips staggered pop-in — once the chips' [data-reveal] ancestor
+   reveals, each <li> rises + fades in sequence. transform/opacity only. */
+.js [data-chip-stagger] > li {
+	opacity: 0;
+}
+
+.js [data-reveal].revealed [data-chip-stagger] > li,
+.js [data-reveal].revealed[data-chip-stagger] > li,
+.js [data-enter].entered [data-chip-stagger] > li,
+.js [data-enter].entered[data-chip-stagger] > li {
+	animation: reveal-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.js [data-chip-stagger] > li:nth-child(1) {
+	animation-delay: 0.32s;
+}
+.js [data-chip-stagger] > li:nth-child(2) {
+	animation-delay: 0.4s;
+}
+.js [data-chip-stagger] > li:nth-child(3) {
+	animation-delay: 0.48s;
+}
+.js [data-chip-stagger] > li:nth-child(4) {
+	animation-delay: 0.56s;
+}
+.js [data-chip-stagger] > li:nth-child(5) {
+	animation-delay: 0.64s;
+}
+.js [data-chip-stagger] > li:nth-child(6) {
+	animation-delay: 0.72s;
+}
+.js [data-chip-stagger] > li:nth-child(7) {
+	animation-delay: 0.8s;
+}
+.js [data-chip-stagger] > li:nth-child(8) {
+	animation-delay: 0.88s;
+}
+
+/* (6) FAQ panel open fade — the disclosure CONTENT fades/rises in. Native
+   <details> still owns show/hide (we never animate height). Gated to .js so a
+   no-JS open still shows content instantly. */
+@keyframes faq-panel-in {
+	from {
+		opacity: 0;
+		transform: translateY(-6px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.js details[open] > [data-faq-panel] {
+	animation: faq-panel-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* (4) CTA sheen sweep — a diagonal light band crosses the primary CTA on hover.
+   transform-only via a clipped pseudo; press feedback comes from btn-base
+   :active scale(.98). */
+.btn-primary {
+	position: relative;
+	overflow: hidden;
+	isolation: isolate;
+}
+
+.btn-primary::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	background: linear-gradient(
+		100deg,
+		transparent 35%,
+		color-mix(in srgb, white 28%, transparent) 50%,
+		transparent 65%
+	);
+	transform: translateX(-130%);
+	transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+	pointer-events: none;
+}
+
+.btn-primary:hover::after {
+	transform: translateX(130%);
+}
+
+/* (3) Learn card hover — numeral micro-move when the card lifts. Card lift uses
+   the existing card-glow-hover; this nudges the ghost numeral for depth. */
+@media (hover: hover) {
+	[data-learn-card]:hover [data-numeral-reveal] {
+		transform: translateY(-4px) scale(1.04);
+	}
+}
+
+[data-learn-card] [data-numeral-reveal] {
+	transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* (8) Hero photo parallax-lite — scroll-driven translate, progressively
+   enhanced. Only applies where animation-timeline: scroll() is supported
+   (Chrome/Edge/Safari TP); Firefox/older fall back to the static reveal. */
+@supports (animation-timeline: scroll()) {
+	@media (prefers-reduced-motion: no-preference) and (min-width: 1024px) {
+		@keyframes hero-parallax {
+			from {
+				transform: translateY(-14px);
+			}
+			to {
+				transform: translateY(14px);
+			}
+		}
+		[data-hero-parallax] {
+			animation: hero-parallax linear both;
+			animation-timeline: scroll(root);
+			animation-range: 0 40vh;
+			will-change: transform;
+		}
+	}
+}
+
+/* (8b) Section background photos — full-bleed atmospheric imagery (never cards).
+   Two motion layers, both progressively enhanced and reduced-motion safe:
+   - ken-burns: slow continuous drift/zoom for life on a static viewport.
+   - bg-parallax: scroll-driven vertical drift while the section is in view.
+   Base scale (1.06–1.12) hides the translate so edges never reveal. */
+@media (prefers-reduced-motion: no-preference) {
+	@keyframes bg-ken-burns {
+		from {
+			transform: scale(1.06);
+		}
+		to {
+			transform: scale(1.16);
+		}
+	}
+	[data-ken-burns] {
+		animation: bg-ken-burns 22s ease-in-out infinite alternate;
+		will-change: transform;
+	}
+}
+
+@supports (animation-timeline: view()) {
+	@media (prefers-reduced-motion: no-preference) {
+		@keyframes bg-parallax {
+			from {
+				transform: translateY(-5%) scale(1.12);
+			}
+			to {
+				transform: translateY(5%) scale(1.12);
+			}
+		}
+		[data-bg-parallax] {
+			animation: bg-parallax linear both;
+			animation-timeline: view();
+			animation-range: cover;
+			will-change: transform;
+		}
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	[data-ken-burns],
+	[data-bg-parallax] {
+		animation: none;
+		transform: scale(1.04);
+	}
+}
+
+/* (7) Sticky header condense — on scroll past hero the header gains a soft
+   shadow and the logo scales down slightly. transform/opacity/box-shadow only
+   (no height animation). `.scrolled` is toggled by Header.astro's scroll JS. */
+#site-header {
+	transition:
+		box-shadow var(--duration-page) var(--ease-editorial),
+		background-color var(--duration-page) var(--ease-editorial),
+		border-color var(--duration-page) var(--ease-editorial);
+}
+
+#site-header img {
+	transform-origin: left center;
+	transition: transform var(--duration-page) var(--ease-editorial);
+}
+
+#site-header.scrolled {
+	box-shadow: var(--shadow-panel);
+	background-color: color-mix(in srgb, var(--color-ink-950) 95%, transparent);
+}
+
+#site-header.scrolled img {
+	transform: scale(0.92);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	#site-header.scrolled img {
+		transform: none;
+	}
+}
+
+/* Polish motion: mobile GPU save — pause continuous loops on small screens. */
+@media (max-width: 768px) {
+	.text-gradient-gold-sweep {
+		animation: none;
+		background-position: 0% center;
+	}
+}
+
+/* Polish motion: reduced-motion — land on the static end-state, never hidden. */
+@media (prefers-reduced-motion: reduce) {
+	.text-gradient-gold-sweep {
+		animation: none;
+		background-position: 0% center;
+	}
+	.js [data-chip-stagger] > li,
+	.js [data-reveal].revealed [data-chip-stagger] > li,
+	.js [data-enter].entered [data-chip-stagger] > li {
+		opacity: 1;
+		animation: none !important;
+		transform: none;
+	}
+	.js details[open] > [data-faq-panel] {
+		animation: none;
+	}
+	.btn-primary::after,
+	.btn-primary:hover::after {
+		transition: none;
+		transform: translateX(-130%);
+	}
+	[data-learn-card] [data-numeral-reveal],
+	[data-learn-card]:hover [data-numeral-reveal] {
+		transition: none;
+		transform: none;
+	}
+}
+
+/* ===== Enhanced Hover Utilities ===== */
+
+/* O halo pulsa no PRÓPRIO elemento, sem pseudo-elemento: `::after` já é do
+   sweep de hover do `.btn-primary` e `::before` é do `[data-shine]`. Os três
+   convivem no mesmo CTA, então cada efeito precisa de um slot só seu — com
+   especificidade idêntica, quem vem depois no arquivo apagava o outro. */
+@utility gold-pulse-glow {
+	position: relative;
+	animation: gold-halo-pulse 3s ease-in-out infinite;
+}
+
+@utility float-gentle {
+	animation: float 6s ease-in-out infinite;
+	will-change: transform;
+}
+
+/* ===== Enhanced Card Hover ===== */
+
+@utility card-glow-hover {
+	transition:
+		transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+		border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+		box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-glow-hover:hover {
+	border-color: color-mix(in srgb, var(--color-gold) 30%, transparent);
+	box-shadow:
+		0 10px 40px color-mix(in srgb, var(--color-gold) 8%, transparent),
+		0 0 20px color-mix(in srgb, var(--color-gold) 5%, transparent);
+	transform: translateY(-4px);
+}
+
+/* ===== Portrait plate =====
+   Os retratos do corpo docente vêm de sessões diferentes e os fundos de estúdio
+   variam de taupe escuro a cinza quase branco. Sem tratamento as chapas claras
+   abrem buracos de luz na banda navy, o olho vai para o fundo mais claro em vez
+   do rosto, e o filete gold sozinho não resolve.
+
+   DUAS CAMADAS COM PAPÉIS DIFERENTES, e a distinção é o ponto desta fase:
+
+   `::before` = GRADE. Fixa, nunca anima. Age só no CAMPO DE FUNDO (faixas
+   laterais + topo), que é onde o estúdio aparece — o miolo central de 34–66%,
+   onde está todo rosto do set, fica intacto. Medido nas fontes: os fundos vão de
+   okL 0.41 (Sacha, taupe escuro) a 0.90 (Dieick, cinza quase branco), e as
+   MATIZES discordam (22° / 39° / 119° / 78° / 27°) enquanto as peles concordam
+   (34°–52°). É a discórdia de matiz que faz o set ler como cinco ensaios; um
+   alpha navy sobre o campo de fundo resolve as duas coisas de uma vez — puxa
+   todas as matizes para a família navy e comprime a faixa de luminância.
+   Por que ramp lateral e não radial: rosto (y 10–36%) e canto superior
+   (y 4–26%) se sobrepõem na vertical, então só a HORIZONTAL separa fundo de
+   pessoa. Um radial que alcançasse o canto alcançaria a testa junto.
+
+   `::after` = ATMOSFERA. Piso navy leve + rampa inferior que assenta o retrato
+   na banda e serve de base tonal ao nome logo abaixo. É esta camada, e só ela,
+   que abre no hover (ver "Portrait motion"): a luz abre sobre a pessoa e a grade
+   do conjunto permanece. Antes o hover abria a vinheta inteira, o que clareava
+   justamente a chapa mais clara do set e desfazia o nivelamento no exato momento
+   em que o olho estava parado ali.
+
+   Token-only, sem hex. Decorativas e `pointer-events: none` — não interferem em
+   foco nem em leitura por leitor de tela. */
+/* `isolation` + z-index nas duas camadas NÃO é cosmético, é correção de um bug
+   medido: a foto ganha `transform` (scale) no hover e na entrada, e um elemento
+   transformado vira contexto de empilhamento pintado na fase de posicionados,
+   em ordem de árvore. Como `::before` vem ANTES da `<picture>`, a foto passava a
+   cobri-lo justamente durante o hover — a grade sumia no exato momento em que o
+   olho estava parado na chapa (medido: `::before` contribuía alpha 0 no hover,
+   topL do Dieick voltava a okL 0.868). `::after` nunca sofreu disso porque vem
+   depois da foto na árvore. `isolation: isolate` mantém os dois z-index presos
+   dentro da chapa, sem competir com irmãos do card. */
+@utility portrait-plate {
+	position: relative;
+	isolation: isolate;
+}
+
+.portrait-plate::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	pointer-events: none;
+	background:
+		linear-gradient(
+			to right,
+			color-mix(in srgb, var(--color-navy-deep) 62%, transparent) 0%,
+			transparent 34%,
+			transparent 66%,
+			color-mix(in srgb, var(--color-navy-deep) 62%, transparent) 100%
+		),
+		linear-gradient(
+			to bottom,
+			color-mix(in srgb, var(--color-navy-deep) 56%, transparent) 0%,
+			transparent 20%
+		);
+}
+
+/* A abertura da atmosfera vira UMA propriedade registrada em vez de um valor
+   escrito direto no `opacity`. Motivo estrutural: dois gatilhos diferentes
+   (hover e scroll) precisam abrir a mesma luz, e se cada um escrevesse
+   `opacity` por conta própria haveria dois autores para o mesmo pixel — foi
+   exatamente esse tipo de divergência que produziu o bug de empilhamento do
+   `::before` na fase anterior. Registrada (`@property`) e não custom property
+   solta porque só assim o valor INTERPOLA: sem o registro o navegador troca de
+   1 para 0.45 em degrau, e nem a transição do hover nem os keyframes do scroll
+   funcionariam.
+   `initial-value: 1` é o estado de repouso — todo caminho de degradação
+   (sem `@property`, sem `view()`, sob `reduce`) cai nele, que é o desenho
+   aprovado e não um fallback pobre. */
+@property --plate-atmosphere {
+	syntax: "<number>";
+	inherits: true;
+	initial-value: 1;
+}
+
+.portrait-plate::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	pointer-events: none;
+	opacity: var(--plate-atmosphere, 1);
+	background: linear-gradient(
+		to top,
+		color-mix(in srgb, var(--color-navy-deep) 55%, transparent) 0%,
+		color-mix(in srgb, var(--color-navy-deep) 28%, transparent) 22%,
+		color-mix(in srgb, var(--color-navy-deep) 12%, transparent) 55%,
+		color-mix(in srgb, var(--color-navy-deep) 12%, transparent) 100%
+	);
+}
+
+/* ===== Portrait motion =====
+   Uma ideia só para os dois lugares onde há retrato (plate da primeira dobra e
+   roster do corpo docente): **a moldura é arquitetura e não se move; quem vive
+   é a foto dentro dela.**
+
+   Isso resolve o falso affordance herdado do audit. O card do docente não é
+   link nem botão, e `card-hover-lift` (translateY(-6px) scale(1.01) na chapa
+   inteira) prometia um clique que não existe — o card inteiro se descolava da
+   página como objeto arrastável. Trocado por revelação DENTRO da própria
+   chapa: a foto respira 4% e a vinheta abre. Nada muda de posição no layout,
+   então nada promete navegação; o que se lê é atenção sobre a pessoa.
+
+   Entrada e hover compartilham o mesmo eixo e a mesma unidade (a foto contra a
+   moldura parada), então o hover lê como continuação da chegada e não como um
+   efeito novo colado depois. */
+
+/* A foto assenta dentro da moldura e ARRASTA em relação a ela: enquanto o card
+   sobe 18px (reveal-up), a foto começa 1.4% acima e desce até o repouso, então
+   percorre menos que o próprio quadro. É o atraso de um corpo mais pesado —
+   a diferença entre "chegou" e um zoom-out genérico.
+   `scale(1.08)` dá 4% de sangria por lado, folga suficiente para o
+   `translateY(-1.4%)` nunca abrir borda dentro do `overflow-hidden`. */
+@keyframes portrait-settle {
+	from {
+		transform: scale(1.08) translateY(-1.4%);
+	}
+	to {
+		transform: scale(1) translateY(0);
+	}
+}
+
+/* --- Offsets da coreografia da dobra ------------------------------------ */
+/* Herdados por custom property em vez de uma segunda regra sobre o mesmo alvo:
+   a chapa 2 atrasa 90ms e a legenda dela 350ms sem que nenhum seletor precise
+   repetir `[data-portrait-photo]` numa especificidade menor mais abaixo no
+   arquivo (`noDescendingSpecificity`). */
+[data-duo-plate] > figure {
+	--portrait-settle-offset: 0ms;
+	--duo-caption-offset: 260ms;
+}
+
+[data-duo-plate] > figure:nth-child(2) {
+	--portrait-settle-offset: 90ms;
+	--duo-caption-offset: 350ms;
+}
+
+/* --- Roster: cadência da procissão -------------------------------------- */
+/* O delay do stagger é `--reveal-index * --stagger-step`, e o índice do card é
+   fixo (1..5). Quem muda com o viewport é o PASSO, porque o que o passo
+   coreografa muda de sentido:
+     1 coluna  — cada card cruza a viewport sozinho, e aí o delay não é cadência,
+                 é lag puro entre o card aparecer e o card animar → 0ms;
+     2 colunas — os pares entram juntos, um passo curto basta;
+     5 colunas — a fila inteira entra de uma vez e a cadência É o efeito: a
+                 chegada do corpo docente vira uma passagem da esquerda para a
+                 direita (110ms × 5 = 550ms de procissão), não um fade coletivo. */
+[data-roster] {
+	--stagger-step: 0ms;
+	--rake-offset: 0%;
+}
+
+@media (min-width: 640px) {
+	[data-roster] {
+		--stagger-step: 60ms;
+	}
+}
+
+@media (min-width: 1024px) {
+	[data-roster] {
+		--stagger-step: 110ms;
+		--rake-offset: 6%;
+	}
+}
+
+/* Fase do rake por card, centrada no meio da fila: o card 3 é o eixo e os
+   vizinhos abrem ±1 e ±2 passos em volta dele. Centrar importa porque a janela
+   de cada card tem 60% do próprio alcance `cover` — deslocar só para frente
+   empurraria o quinto card para além de 100% e ele sairia de vista com a luz
+   ainda aberta. Em 1 e 2 colunas o passo é 0%: lá as linhas já entram em
+   momentos diferentes de scroll, e um deslocamento por índice desincronizaria
+   o card do próprio movimento dele. */
+[data-roster-card] {
+	--rake-shift: calc((var(--reveal-index, 3) - 3) * var(--rake-offset, 0%));
+}
+
+/* --- Reveal de atenção: uma luz, dois gatilhos -------------------------- */
+/* O efeito é UM só — a atmosfera (`::after`) abre sobre a pessoa enquanto a
+   moldura fica parada. O que muda é QUEM dispara, e a divisão é pelo que o
+   aparelho tem:
+     tela de toque → o SCROLL, porque não existe hover para escolher, e sem
+                     isso metade do público nunca via o reveal;
+     ponteiro fino → o HOVER, porque aí o leitor escolhe qual rosto olhar.
+   Os dois nunca coexistem no mesmo aparelho, e não é preferência: uma animação
+   de scroll vence qualquer `transition` de hover na cascata, e o hover ficaria
+   morto onde o rake existisse.
+
+   A ordem dos dois blocos abaixo é imposta pelo `noDescendingSpecificity` do
+   biome, não pela narrativa: o rake fecha em (0,2,0) e o hover abre em (0,2,1),
+   então o rake precisa vir antes. */
+
+/* (1) SCROLL — aparelhos sem hover.
+   Progressivamente melhorado em três camadas independentes: `@supports` para o
+   motor sem `view()` (Firefox hoje), `no-preference` para quem pede menos
+   movimento, e o próprio media de toque. Falhando qualquer uma, a chapa fica
+   no estado de repouso — que já é o desenho aprovado, não um fallback pobre.
+   Nada é escondido em nenhum momento: a única propriedade animada abre uma
+   camada DECORATIVA, e o extremo do movimento deixa a pessoa MAIS visível, não
+   menos. Por isso não precisa de gate `.js` nem de `<noscript>`.
+
+   A luz não é a mesma para todo mundo ao mesmo tempo: cada chapa tem a própria
+   linha do tempo `view()`, então numa coluna cada rosto acende quando chega ao
+   centro da tela, e na fila de 5 as fases deslocadas viram uma passagem da
+   esquerda para a direita — a mesma procissão que a entrada já desenha, agora
+   presa ao dedo de quem rola.
+
+   Só luz, sem escala: a foto já carrega `portrait-settle` em `transform`, e uma
+   segunda animação na mesma propriedade sobrescreveria a entrada.
+
+   A animação vive na CHAPA (elemento real) e não no `::after`, e isso é achado
+   medido, não estilo: com `animation-timeline: view()` declarado direto no
+   pseudo, o Chrome CRIA a `ViewTimeline` (ela aparece em `getAnimations`) mas
+   nunca a avança — a opacity computada ficou presa em 0.450 nos 17 pontos de
+   uma varredura de scroll inteira, inclusive com a chapa fora da tela. Movida
+   para a chapa, a mesma curva percorre 1.000 → 0.450 (chapa no centro da tela)
+   → 1.000. É por isso que a propriedade registrada acima existe: ela é a ponte
+   entre o elemento que consegue ter linha do tempo e o pseudo que pinta. */
+@supports (animation-timeline: view()) {
+	@media (prefers-reduced-motion: no-preference) {
+		@media (hover: none), (pointer: coarse) {
+			/* UM keyframe só, e o `from` fica implícito no valor de repouso do
+			   elemento (o `initial-value: 1` do `@property`). Não é economia de
+			   estilo: o `noDuplicateCustomProperties` do biome trata o `@keyframes`
+			   inteiro como UM escopo, então declarar a mesma custom property em dois
+			   blocos — que é como se escreve qualquer animação de propriedade
+			   registrada — reprova o lint. O keyframe implícito diz a mesma coisa e
+			   ainda amarra o início ao repouso real em vez de repetir o número.
+			   A ida-e-volta vem de `alternate` + 2 iterações dentro do mesmo alcance
+			   de scroll, não de um triângulo de três blocos. */
+			@keyframes plate-rake {
+				to {
+					--plate-atmosphere: 0.45;
+				}
+			}
+
+			/* Janela de 60% centrada em 50% do alcance `cover`: o pico cai quando a
+			   chapa está no meio da tela, que é onde o rosto está sendo lido. */
+			[data-roster-card] .portrait-plate {
+				animation-name: plate-rake;
+				animation-timing-function: linear;
+				animation-fill-mode: both;
+				animation-iteration-count: 2;
+				animation-direction: alternate;
+				animation-timeline: view();
+				animation-range: cover calc(20% + var(--rake-shift, 0%)) cover
+					calc(80% + var(--rake-shift, 0%));
+			}
+		}
+	}
+}
+
+/* (2) HOVER — ponteiro fino.
+   `no-preference` no próprio media query, em vez de um bloco `reduce` que
+   desfaz depois: sob movimento reduzido o efeito simplesmente não existe. Com
+   o reset global (`transition-duration: 0.01ms`) ele viraria um salto de
+   escala e um piscar de vinheta — pior que não ter efeito. */
+@media (hover: hover) and (pointer: fine) and (
+		prefers-reduced-motion: no-preference
+	) {
+	/* `:is()` põe roster e dobra sob a mesma regra porque a regra do sistema é a
+	   mesma nos dois lugares — a moldura é arquitetura, quem vive é a foto. A
+	   fase anterior deixou a dobra inerte para não disputar com o CTA; o
+	   argumento não se sustenta medido: o plate ocupa o topo da COLUNA ESQUERDA
+	   e o formulário é a coluna direita, então o ponteiro a caminho do CTA não
+	   cruza o retrato. O hover aqui não atrai atenção, ele RESPONDE a uma
+	   atenção já dada — e é justamente no momento em que a leitora decide
+	   preencher o formulário que o rosto de quem vai ensinar tem trabalho a
+	   fazer. Sem deslocamento de layout, então segue sem prometer clique. */
+	:is([data-roster-card], [data-duo-plate] > figure) [data-portrait-photo] {
+		transition: transform 380ms var(--ease-editorial);
+	}
+
+	:is([data-roster-card], [data-duo-plate] > figure) .portrait-plate {
+		transition: --plate-atmosphere 300ms var(--ease-editorial);
+	}
+
+	:is([data-roster-card], [data-duo-plate] > figure):hover
+		[data-portrait-photo] {
+		transform: scale(1.04);
+	}
+
+	/* Abre SÓ a atmosfera (`::after`). A grade (`::before`) fica — é ela que
+	   nivela os cinco fundos de estúdio, e antes desta separação o hover abria a
+	   vinheta inteira: a chapa mais clara do set clareava mais que as outras
+	   justamente enquanto o olho estava parado nela. Medido no Dieick, canto
+	   superior: era okL 0.822 → 0.867 no hover; agora 0.517 → 0.539, enquanto o
+	   ROSTO abre 0.565 → 0.596. A luz passou a abrir sobre a pessoa, não sobre o
+	   fundo. Uma por vez, então o conjunto não se desfaz. */
+	:is([data-roster-card], [data-duo-plate] > figure):hover .portrait-plate {
+		--plate-atmosphere: 0.45;
+	}
+}
+
+/* --- Entrada ------------------------------------------------------------ */
+/* Tudo sob `no-preference`: o estado escondido (`opacity: 0`) nunca chega a ser
+   aplicado para quem pede menos movimento, então não há contra-regra para
+   errar. Somado ao gate `.js`, são duas saídas independentes — sem JavaScript
+   ou sem motion, o conteúdo nasce visível.
+
+   O alvo é `[data-portrait-photo]` e não `.portrait-plate img` porque um
+   seletor terminado em `img` depois de `#site-header img` dispara
+   `noDescendingSpecificity` no biome (o logo do header nunca é um retrato, mas
+   a regra compara o último compound, não o alcance real).
+
+   fill-mode BACKWARDS e fim SEM transform (gotcha #1 do
+   docs/motion-depth-playbook.md): o keyframe termina no estado natural do
+   elemento, então nada fica congelado e o hover acima continua respondendo. */
+@media (prefers-reduced-motion: no-preference) {
+	/* A foto só anima transform — nunca é escondida por opacity, logo não há
+	   nada novo para o <noscript> do Layout cobrir. */
+	.js [data-reveal].revealed [data-portrait-photo],
+	.js [data-enter].entered [data-portrait-photo] {
+		animation-name: portrait-settle;
+		animation-duration: 720ms;
+		animation-timing-function: var(--ease-editorial);
+		animation-fill-mode: backwards;
+		animation-delay: calc(
+			var(--reveal-index, 0) *
+			var(--stagger-step) +
+			var(--portrait-settle-offset, 0ms)
+		);
+	}
+
+	/* Dobra: os nomes assinam depois das fotos, na mesma ordem — duas pessoas
+	   entrando em quadro, não um par simétrico surgindo de uma vez. */
+	.js [data-duo-plate] figcaption {
+		opacity: 0;
+	}
+
+	.js [data-reveal].revealed [data-duo-plate] figcaption,
+	.js [data-enter].entered [data-duo-plate] figcaption {
+		opacity: 1;
+		animation-name: reveal-up;
+		animation-duration: 380ms;
+		animation-timing-function: var(--ease-editorial);
+		animation-fill-mode: backwards;
+		animation-delay: calc(
+			var(--reveal-index, 0) *
+			var(--stagger-step) +
+			var(--duo-caption-offset, 0ms)
+		);
+	}
+
+	/* Segundo tempo do card do docente: a pessoa chega (foto), depois é
+	   apresentada (nome, área e bio sobem juntos, 170ms atrás da foto). Três
+	   elementos com o MESMO delay lêem como uma unidade — escalonar linha a
+	   linha viraria fadiga de animação numa fila de 5. */
+	.js [data-roster-card] > h3,
+	.js [data-roster-card] > p {
+		opacity: 0;
+	}
+
+	.js [data-roster-card][data-reveal].revealed > h3,
+	.js [data-roster-card][data-reveal].revealed > p {
+		opacity: 1;
+		animation-name: reveal-up;
+		animation-duration: 420ms;
+		animation-timing-function: var(--ease-editorial);
+		animation-fill-mode: backwards;
+		animation-delay: calc(var(--reveal-index, 0) * var(--stagger-step) + 170ms);
+	}
+}
+
+/* ===== Glass Card Quiet (repeated grid / content cards) =====
+   Third glass tier so glass reads as HIERARCHY, not wallpaper. Used on the
+   high-count secondary surfaces (Learn cards, Mechanism panels, Testimonials,
+   FAQ rows) that previously all shared the standard `glass-card` and made depth
+   read uniform. Quieter than glass-card: lighter blur, dimmer border, no gold
+   inner radial, softer ambient shadow — recedes so the standard + bright tiers
+   (Hero portrait, ProofBar, NextStep, CTAs) carry the focal weight.
+   Token-only; no new hex; no new color token. */
+@utility glass-card-quiet {
+	background: linear-gradient(
+		180deg,
+		color-mix(in srgb, var(--color-navy-light) 80%, transparent) 0%,
+		color-mix(in srgb, var(--color-navy) 90%, transparent) 100%
+	);
+	border: 1px solid color-mix(in srgb, var(--color-gold) 12%, transparent);
+	backdrop-filter: blur(12px) saturate(115%);
+	box-shadow:
+		0 14px 40px color-mix(in srgb, var(--color-navy) 38%, transparent),
+		inset 0 1px 0 color-mix(in srgb, white 5%, transparent);
+}
+
+/* ===== Glass Card Bright (CTA sections) ===== */
+
+@utility glass-card-bright {
+	background:
+		linear-gradient(
+			180deg,
+			color-mix(in srgb, var(--color-navy-light) 85%, white 8%) 0%,
+			color-mix(in srgb, var(--color-navy) 88%, transparent) 100%
+		),
+		radial-gradient(
+			circle at top left,
+			color-mix(in srgb, var(--color-gold) 18%, transparent) 0%,
+			transparent 50%
+		);
+	border: 1px solid color-mix(in srgb, var(--color-gold) 35%, transparent);
+	backdrop-filter: blur(24px) saturate(140%);
+	box-shadow:
+		0 0 40px color-mix(in srgb, var(--color-gold) 15%, transparent),
+		0 24px 70px color-mix(in srgb, var(--color-navy) 45%, transparent),
+		inset 0 1px 0 color-mix(in srgb, white 10%, transparent);
+}
+
+/* ===== Mesh Gradient (Landing Hero) ===== */
+
+@keyframes mesh-drift {
+	0%,
+	100% {
+		background-position:
+			0% 50%,
+			100% 50%,
+			50% 0%;
+	}
+	33% {
+		background-position:
+			100% 50%,
+			0% 100%,
+			50% 100%;
+	}
+	66% {
+		background-position:
+			50% 100%,
+			50% 0%,
+			0% 50%;
+	}
+}
+
+@utility landing-mesh-bg {
+	background:
+		radial-gradient(
+			ellipse at 25% 25%,
+			color-mix(in srgb, var(--color-gold) 8%, transparent) 0%,
+			transparent 50%
+		),
+		radial-gradient(
+			ellipse at 75% 75%,
+			color-mix(in srgb, var(--color-gold-dark) 6%, transparent) 0%,
+			transparent 50%
+		),
+		radial-gradient(
+			ellipse at 50% 50%,
+			color-mix(in srgb, var(--color-navy-lighter) 15%, transparent) 0%,
+			transparent 60%
+		);
+	background-size:
+		200% 200%,
+		200% 200%,
+		200% 200%;
+	animation: mesh-drift 20s ease-in-out infinite;
+}
+
+/* Static atmospheric vignette — deepens the hero edges so content floats on a
+   framed canvas. Token-only (navy mix), no animation, no CLS. Layers ON TOP of
+   landing-mesh-bg as a separate aria-hidden element.
+   Base mix is intentionally light so SHORT viewports (where the top + bottom
+   gradients overlap behind the content) don't read as muddy; the fuller depth
+   only kicks in on taller viewports. */
+/* A vinheta escurece as bordas. Com navy (#1a1a2e) sobre o canvas ink (#000)
+   ela fazia o contrário — clareava — porque navy é MAIS claro que o fundo. */
+@utility landing-vignette {
+	background:
+		radial-gradient(
+			ellipse 120% 80% at 50% 0%,
+			transparent 45%,
+			color-mix(in srgb, var(--color-ink-950) 55%, transparent) 100%
+		),
+		radial-gradient(
+			ellipse 100% 60% at 50% 100%,
+			transparent 50%,
+			color-mix(in srgb, var(--color-ink-950) 60%, transparent) 100%
+		);
+}
+
+@media (min-height: 800px) {
+	.landing-vignette {
+		background:
+			radial-gradient(
+				ellipse 120% 80% at 50% 0%,
+				transparent 40%,
+				color-mix(in srgb, var(--color-navy) 55%, transparent) 100%
+			),
+			radial-gradient(
+				ellipse 100% 60% at 50% 100%,
+				transparent 45%,
+				color-mix(in srgb, var(--color-navy) 65%, transparent) 100%
+			);
+	}
+}
+
+/* ===== Mousemove Glow Card ===== */
+
+[data-glow-card] {
+	--mouse-x: 50%;
+	--mouse-y: 50%;
+	position: relative;
+}
+
+[data-glow-card]::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	background: radial-gradient(
+		300px circle at var(--mouse-x) var(--mouse-y),
+		color-mix(in srgb, var(--color-gold) 12%, transparent),
+		transparent 60%
+	);
+	opacity: 0;
+	transition: opacity 0.3s ease;
+	pointer-events: none;
+	z-index: 1;
+}
+
+[data-glow-card]:hover::before {
+	opacity: 1;
+}
+
+/* ===== Gradient Text =====
+   `background-clip: text` fica (cânone visual GPUS: o gold em texto é assinatura
+   de marca). O que esta fase acrescentou foi o cinto de segurança, e os dois
+   pontos abaixo foram MEDIDOS, não supostos:
+
+   1. Cor sólida como base, transparência só sob `@supports`. Antes, um motor que
+      aplicasse `-webkit-text-fill-color: transparent` sem suportar o clip
+      deixaria a palavra destacada INVISÍVEL — e é a palavra que fecha o h1 do
+      Hero. Agora o pior caso é gold chapado, que é o próprio fallback certo.
+   2. `forced-colors`. Medido no Chrome com `forced-colors: active` emulado: o
+      motor força `color` e remove `background-image`, mas `getComputedStyle`
+      segue reportando `-webkit-text-fill-color: rgba(0,0,0,0)`. O texto AINDA
+      assim pinta (p99 de luminância do span = 1.0, glifos brancos), então no
+      Chrome não há defeito. Não consigo testar Gecko/WebKit aqui e o custo de
+      garantir é de 3 linhas, então o bloco abaixo torna o comportamento
+      explícito em vez de depender do UA. Sem regressão possível no Chrome:
+      `currentColor` sob forced-colors resolve para a mesma cor forçada.
+
+   Contraste medido do trecho MAIS ESCURO do gradiente (`--color-gold`) contra o
+   fundo real: Hero (fundo fotográfico) 7.34:1 médio e 6.59:1 no pior pixel de
+   fundo do p95; Faculty sobre `band-alt` 7.19:1. AA com folga nos dois. */
+
+@utility text-gradient-gold {
+	color: var(--color-gold);
+	background: linear-gradient(
+		135deg,
+		var(--color-gold),
+		var(--color-gold-light)
+	);
+	-webkit-background-clip: text;
+	background-clip: text;
+}
+
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+	.text-gradient-gold,
+	.text-gradient-gold-sweep {
+		-webkit-text-fill-color: transparent;
+	}
+}
+
+@media (forced-colors: active) {
+	.text-gradient-gold,
+	.text-gradient-gold-sweep {
+		background-image: none;
+		-webkit-text-fill-color: currentColor;
+		animation: none;
+	}
+}
+
+/* Escala de profundidade: sem @utility. O namespace `--shadow-*` do Tailwind v4
+   já gera `shadow-panel`, `shadow-lift`, `shadow-halo-gold` e `shadow-rim` a
+   partir dos tokens do @theme — declarar utilities aqui só duplicaria. */
+
+/* ===== Button State Presets (DESIGN.md §3) ===== */
+
+@utility btn-base {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	min-height: 44px;
+	padding: 0 1.5rem;
+	border-radius: 0.5rem;
+	font-family: var(--font-sans);
+	font-weight: 600;
+	font-size: 0.9375rem;
+	line-height: 1;
+	letter-spacing: 0.01em;
+	white-space: nowrap;
+	cursor: pointer;
+	transition:
+		transform var(--duration-hover) var(--ease-editorial),
+		background-color var(--duration-hover) var(--ease-editorial),
+		border-color var(--duration-hover) var(--ease-editorial),
+		box-shadow var(--duration-hover) var(--ease-editorial);
+	will-change: transform;
+}
+
+.btn-base:focus-visible {
+	outline: 2px solid var(--color-gold);
+	outline-offset: 2px;
+}
+
+.btn-base:active:not(:disabled) {
+	transform: scale(0.98);
+}
+
+.btn-base:disabled,
+.btn-base[aria-disabled="true"] {
+	opacity: 0.5;
+	cursor: not-allowed;
+	pointer-events: none;
+}
+
+@utility btn-primary {
+	background-color: var(--color-gold);
+	color: var(--color-navy);
+	border: 1px solid var(--color-gold);
+}
+
+.btn-primary:hover:not(:disabled) {
+	background-color: var(--color-gold-light);
+	border-color: var(--color-gold-light);
+	box-shadow: var(--shadow-halo-gold);
+	transform: scale(1.02);
+}
+
+@utility btn-secondary {
+	background-color: transparent;
+	color: var(--color-gold);
+	border: 1px solid color-mix(in srgb, var(--color-gold) 50%, transparent);
+}
+
+.btn-secondary:hover:not(:disabled) {
+	background-color: color-mix(in srgb, var(--color-gold) 12%, transparent);
+	border-color: var(--color-gold);
+	transform: scale(1.02);
+}
+
+@utility btn-ghost {
+	background-color: transparent;
+	color: var(--color-text-primary);
+	border: 1px solid transparent;
+}
+
+.btn-ghost:hover:not(:disabled) {
+	background-color: color-mix(
+		in srgb,
+		var(--color-text-primary) 8%,
+		transparent
+	);
+}
+
+@utility btn-whatsapp {
+	background-color: var(--color-whatsapp);
+	color: var(--color-text-primary);
+	border: 1px solid var(--color-whatsapp);
+}
+
+.btn-whatsapp:hover:not(:disabled) {
+	background-color: var(--color-whatsapp-hover);
+	border-color: var(--color-whatsapp-hover);
+	box-shadow: 0 0 30px
+		color-mix(in srgb, var(--color-whatsapp) 35%, transparent);
+	transform: scale(1.02);
+}
+
+/* ===== Accessibility Helpers ===== */
+
+@utility sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* aria-live region default styling hook — visual no-op, marks intent */
+[role="status"][aria-live="polite"],
+[role="alert"][aria-live="assertive"] {
+	min-height: 1lh;
+}
+
+/* ===== Scroll Progress Bar ===== */
+
+/* Fixed top hairline; the shared Layout script writes scaleX(0..1) on the fill.
+   Compositor-only (transform). Decorative → aria-hidden; no-JS stays at 0. */
+[data-scroll-progress] {
+	transform: scaleX(0);
+	transform-origin: 0 50%;
+	will-change: transform;
+}
+
+/* ===== Carousel (scroll-snap track) ===== */
+
+/* Native horizontal scroll-snap. Works fully no-JS; the component script only
+   adds prev/next + dot sync. overscroll-behavior-x stops the swipe from
+   hijacking vertical page scroll on mobile (scroll-owner discipline). */
+@utility carousel-track {
+	display: flex;
+	gap: 1rem;
+	overflow-x: auto;
+	scroll-snap-type: x mandatory;
+	overscroll-behavior-x: contain;
+	scrollbar-width: none;
+	scroll-behavior: smooth;
+}
+
+.carousel-track::-webkit-scrollbar {
+	display: none;
+}
+
+.carousel-track > * {
+	scroll-snap-align: center;
+	flex: 0 0 auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.carousel-track {
+		scroll-behavior: auto;
+	}
+}
+
+/* ===== Tabs (Mechanism pillars) ===== */
+
+/* Active panel fades in. Gated to .js so a no-JS visit shows every panel
+   stacked (the script adds [hidden] to inactive panels on init). */
+.js [data-tabpanel][hidden] {
+	display: none;
+}
+
+.js [data-tabpanel]:not([hidden]) {
+	animation: faq-panel-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.js [data-tabpanel]:not([hidden]) {
+		animation: none;
+	}
+}
+
+/* ===== ANIMATE PHASE (impeccable 3/5) ===== */
+
+/* Mechanism formula chips — once the formula row's [data-reveal] ancestor
+   reveals, each chip (operands, +/=, result) scales + fades in sequence.
+   transform/opacity only, reuses reveal-scale. The row is aria-hidden and uses
+   reveal-scale itself; these children settle in AFTER it. Children are direct
+   spans/fragments, so target every direct child. */
+.js [data-formula-stagger] > * {
+	opacity: 0;
+}
+
+.js [data-reveal].revealed[data-formula-stagger] > *,
+.js [data-reveal].revealed [data-formula-stagger] > * {
+	animation: reveal-scale 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.js [data-formula-stagger] > *:nth-child(1) {
+	animation-delay: 0.12s;
+}
+.js [data-formula-stagger] > *:nth-child(2) {
+	animation-delay: 0.18s;
+}
+.js [data-formula-stagger] > *:nth-child(3) {
+	animation-delay: 0.24s;
+}
+.js [data-formula-stagger] > *:nth-child(4) {
+	animation-delay: 0.3s;
+}
+.js [data-formula-stagger] > *:nth-child(5) {
+	animation-delay: 0.36s;
+}
+.js [data-formula-stagger] > *:nth-child(6) {
+	animation-delay: 0.42s;
+}
+.js [data-formula-stagger] > *:nth-child(7) {
+	animation-delay: 0.48s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.js [data-formula-stagger] > *,
+	.js [data-reveal].revealed [data-formula-stagger] > * {
+		opacity: 1;
+		animation: none !important;
+		transform: none;
+	}
+}
+
+/* Mechanism tab buttons — micro-lift on hover (the active tab already gets a
+   gold tint via aria-selected). transform only; press uses btn-base active. */
+@media (hover: hover) {
+	[data-mechanism] [role="tab"] {
+		transition:
+			transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+			background-color var(--duration-hover) var(--ease-editorial),
+			border-color var(--duration-hover) var(--ease-editorial),
+			color var(--duration-hover) var(--ease-editorial);
+	}
+	[data-mechanism] [role="tab"]:hover:not([aria-selected="true"]) {
+		transform: translateY(-2px);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	[data-mechanism] [role="tab"],
+	[data-mechanism] [role="tab"]:hover {
+		transition: none;
+		transform: none;
+	}
+}
+
+/* Na Mesa: a composição editorial usa a serifa só na landing pública. */
+.mesa-container {
+	width: min(100% - 3rem, 76rem);
+	margin-inline: auto;
+}
+
+.mesa-site {
+	color-scheme: dark;
+}
+
+.mesa-header {
+	position: relative;
+	z-index: 10;
+	padding-block: 2.5rem;
+}
+
+.mesa-header-home {
+	position: absolute;
+	inset: 0 0 auto;
+}
+
+.mesa-header-inner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 2rem;
+}
+
+.mesa-home-link {
+	display: inline-flex;
+	min-height: 2.75rem;
+}
+
+.mesa-mark {
+	display: inline-flex;
+	align-items: flex-end;
+	gap: 0.625rem;
+	color: var(--color-text-primary);
+	white-space: nowrap;
+}
+
+.mesa-mark-name {
+	display: flex;
+	flex-direction: column;
+	font-size: 0.875rem;
+	font-weight: 700;
+	line-height: 0.95;
+	letter-spacing: -0.05em;
+}
+
+.mesa-mark-name strong {
+	border-top: 2px solid currentColor;
+	font-size: 1.75rem;
+	font-weight: 800;
+	line-height: 1;
+}
+
+.mesa-mark-host {
+	padding-bottom: 0.1rem;
+	font-size: 1.0625rem;
+	font-weight: 500;
+}
+
+.mesa-mark-host em {
+	margin-right: 0.15rem;
+	font-family: var(--font-editorial);
+	font-size: 1.125rem;
+	font-weight: 400;
+	color: var(--color-gold-light);
+}
+
+.mesa-nav {
+	display: flex;
+	gap: 1.75rem;
+	font-size: 0.8125rem;
+}
+
+.mesa-nav a {
+	display: inline-flex;
+	align-items: center;
+	min-height: 2.75rem;
+	text-shadow: 0 1px 6px var(--color-ink-950);
+}
+
+.mesa-hero {
+	position: relative;
+	isolation: isolate;
+	overflow: clip;
+	background: var(--color-ink-950);
+}
+
+.mesa-hero-lines {
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	width: 100%;
+	height: 100%;
+	color: var(--color-gold);
+	pointer-events: none;
+}
+
+.mesa-hero-lines path {
+	stroke: currentColor;
+	stroke-width: 1.2;
+	opacity: 0.35;
+}
+
+.mesa-hero-grid {
+	display: grid;
+	grid-template-columns: 1fr 0.96fr;
+	column-gap: 3rem;
+	padding-block: 9rem 4rem;
+}
+
+.mesa-hero-intro {
+	position: relative;
+	z-index: 2;
+	grid-column: 1;
+	max-width: 37rem;
+}
+
+.mesa-hero h1 {
+	font-family: var(--font-editorial);
+	font-size: clamp(2.6rem, 3.45vw, 3.5rem);
+	font-weight: 400;
+	line-height: 1.1;
+	letter-spacing: -0.03em;
+	text-wrap: balance;
+}
+
+.mesa-hero h1 span {
+	display: block;
+	color: var(--color-gold-light);
+}
+
+.mesa-hero-summary {
+	max-width: 33rem;
+	margin-top: 1.5rem;
+	color: var(--color-text-secondary);
+	font-size: 1.0625rem;
+	line-height: 1.65;
+	text-wrap: pretty;
+}
+
+.mesa-hero-portrait {
+	position: absolute;
+	z-index: -1;
+	inset: 0 0 0 44%;
+	pointer-events: none;
+	mask-image: linear-gradient(to right, transparent, black 22%);
+}
+
+.mesa-hero-picture {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.mesa-hero-image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: 50% 24%;
+}
+
+.mesa-hero-form {
+	grid-column: 1;
+	position: relative;
+	z-index: 2;
+	width: 100%;
+	max-width: 32rem;
+	margin-top: 2rem;
+}
+
+.mesa-form-heading {
+	font-size: 1rem;
+	font-weight: 650;
+	line-height: 1.5;
+}
+
+.mesa-form-note {
+	margin-top: 0.25rem;
+	color: var(--color-text-secondary);
+	font-size: 0.75rem;
+	line-height: 1.5;
+}
+
+.mesa-form-label {
+	display: block;
+	margin-bottom: 0.375rem;
+	font-size: 0.75rem;
+	font-weight: 500;
+	line-height: 1.5;
+	color: var(--color-text-primary);
+}
+
+.mesa-form-input {
+	display: block;
+	width: 100%;
+	min-height: 3rem;
+	border: 1px solid var(--color-paper-line);
+	border-radius: 0.5rem;
+	padding: 0.75rem 1rem;
+	color: var(--color-paper-ink);
+	background-color: var(--color-input);
+	font-size: 1rem;
+	line-height: 1.4;
+	color-scheme: light;
+	caret-color: var(--color-paper-ink);
+	accent-color: var(--color-gold-dark);
+}
+
+.mesa-form-input::placeholder {
+	color: var(--color-input-muted);
+	opacity: 1;
+}
+
+.mesa-form-input:focus-visible {
+	outline: 2px solid var(--color-gold-light);
+	outline-offset: 3px;
+}
+
+.mesa-form-input[aria-invalid="true"] {
+	border-color: var(--color-error);
+	box-shadow: 0 0 0 1px var(--color-error);
+}
+
+.mesa-field-error::before {
+	content: "!";
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1em;
+	height: 1em;
+	margin-right: 0.4rem;
+	border: 1px solid currentColor;
+	border-radius: 50%;
+	font-size: 0.8em;
+	font-weight: 700;
+}
+
+.mesa-form-consent {
+	font-size: 0.75rem;
+	line-height: 1.65;
+}
+
+.mesa-button {
+	background: linear-gradient(
+		105deg,
+		var(--color-gold-light),
+		var(--color-gold)
+	);
+	color: var(--color-ink-950);
+	font-family: var(--font-sans);
+	font-weight: 700;
+	box-shadow: none;
+	text-align: center;
+}
+
+.mesa-registration #form-whatsapp-alt {
+	margin-top: 0.75rem;
+	font-size: 0.8125rem;
+}
+
+.mesa-registration #form-whatsapp-alt a {
+	color: var(--color-text-secondary);
+	text-decoration: underline;
+	text-underline-offset: 0.25em;
+}
+
+.mesa-registration #form-status:empty {
+	display: none;
+}
+
+.mesa-ticker {
+	border-block: 1px solid var(--color-gold-dark);
+	background: var(--color-gold-light);
+	color: var(--color-ink-950);
+}
+
+.mesa-ticker ul {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1.5rem;
+	padding-block: 1.35rem;
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.14em;
+}
+
+.mesa-ticker li + li::before {
+	content: "·";
+	margin-right: clamp(1rem, 4vw, 4rem);
+	font-size: 1rem;
+}
+
+.mesa-learn {
+	padding-block: 6rem;
+	background: var(--color-paper);
+	color: var(--color-paper-ink);
+	scroll-margin-top: 2rem;
+}
+
+.mesa-section-intro {
+	max-width: 41rem;
+	margin: 0 auto 3rem;
+	text-align: center;
+}
+
+.mesa-section-intro h2,
+.mesa-authority h2 {
+	font-family: var(--font-editorial);
+	font-size: clamp(2rem, 3.4vw, 3rem);
+	font-weight: 400;
+	line-height: 1.15;
+	letter-spacing: -0.025em;
+	text-wrap: balance;
+}
+
+.mesa-section-summary {
+	margin-top: 1.25rem;
+	color: var(--color-paper-muted);
+	font-size: 1rem;
+	line-height: 1.7;
+	text-wrap: pretty;
+}
+
+.mesa-topics {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 1.25rem;
+}
+
+.mesa-topic {
+	padding: 2rem;
+	border: 1px solid var(--color-paper-line);
+	border-radius: 0.25rem;
+	background: var(--color-paper-card);
+}
+
+.mesa-topic-number {
+	display: inline-block;
+	margin-bottom: 2.5rem;
+	color: var(--color-paper-muted);
+	font-family: var(--font-editorial);
+	font-size: 1.125rem;
+}
+
+.mesa-topic-title {
+	font-family: var(--font-editorial);
+	font-size: clamp(1.5rem, 2.2vw, 1.9rem);
+	font-weight: 400;
+	line-height: 1.15;
+	letter-spacing: -0.025em;
+	text-wrap: balance;
+}
+
+.mesa-topic-body {
+	margin-top: 1rem;
+	color: var(--color-paper-muted);
+	font-size: 0.9375rem;
+	line-height: 1.75;
+	text-wrap: pretty;
+}
+
+.mesa-authority {
+	padding-block: 6rem;
+	scroll-margin-top: 2rem;
+}
+
+.mesa-authority-grid {
+	display: grid;
+	grid-template-columns: 0.9fr 1fr;
+	align-items: center;
+	gap: clamp(3rem, 7vw, 7rem);
+}
+
+.mesa-authority-portrait {
+	aspect-ratio: 4 / 5;
+	border-radius: 0.25rem;
+	overflow: hidden;
+}
+
+.mesa-authority-image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center;
+}
+
+.mesa-eyebrow {
+	margin-bottom: 1rem;
+	color: var(--color-gold-light);
+	font-size: 0.75rem;
+	font-weight: 500;
+	line-height: 1.5;
+	text-transform: uppercase;
+	letter-spacing: 0.16em;
+}
+
+.mesa-authority-role {
+	margin-top: 0.75rem;
+	color: var(--color-gold-light);
+	font-size: 0.875rem;
+}
+
+.mesa-authority-bio {
+	margin-top: 1.75rem;
+	color: var(--color-text-secondary);
+	line-height: 1.8;
+	text-wrap: pretty;
+}
+
+.mesa-authority-cta {
+	margin-top: 2rem;
+	padding-top: 2rem;
+	border-top: 1px solid color-mix(in srgb, var(--color-gold) 35%, transparent);
+}
+
+.mesa-authority-invite {
+	font-family: var(--font-editorial);
+	font-size: 1.75rem;
+	font-weight: 400;
+	line-height: 1.2;
+}
+
+.mesa-authority-schedule {
+	margin-block: 0.75rem 1.5rem;
+	color: var(--color-text-secondary);
+	font-size: 0.875rem;
+	line-height: 1.5;
+}
+
+.mesa-footer {
+	border-top: 1px solid color-mix(in srgb, var(--color-gold) 25%, transparent);
+	padding-block: 3rem 1.5rem;
+}
+
+.mesa-footer-top {
+	display: flex;
+	justify-content: space-between;
+	gap: 3rem;
+}
+
+.mesa-footer-description {
+	max-width: 24rem;
+	margin-top: 1.5rem;
+	color: var(--color-text-secondary);
+	font-size: 0.875rem;
+	line-height: 1.7;
+}
+
+.mesa-footer-links {
+	display: grid;
+	grid-template-columns: repeat(2, auto);
+	align-content: start;
+	gap: 0.5rem 3rem;
+	font-size: 0.8125rem;
+}
+
+.mesa-footer a,
+.mesa-footer button {
+	display: inline-flex;
+	align-items: center;
+	min-height: 2.75rem;
+}
+
+.mesa-footer-disclaimer {
+	max-width: 65rem;
+	margin-top: 2rem;
+	color: var(--color-text-muted);
+	font-size: 0.75rem;
+	line-height: 1.7;
+}
+
+.mesa-footer-bottom {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-top: 2rem;
+	padding-top: 1rem;
+	border-top: 1px solid color-mix(in srgb, var(--color-gold) 20%, transparent);
+	color: var(--color-text-secondary);
+	font-size: 0.75rem;
+	line-height: 1.5;
+}
+
+.mesa-footer-legal {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem 1.5rem;
+}
+
+.mesa-legal {
+	max-width: 48rem;
+	padding-block: 3rem 6rem;
+}
+
+.mesa-legal h1 {
+	font-family: var(--font-editorial);
+	font-size: clamp(2.25rem, 5vw, 3.5rem);
+	line-height: 1.1;
+	color: var(--color-gold-light);
+}
+
+.mesa-legal-updated {
+	margin-block: 1.5rem 3rem;
+	font-size: 0.875rem;
+	color: var(--color-text-muted);
+}
+
+.mesa-legal section + section {
+	margin-top: 2rem;
+}
+
+.mesa-legal h2 {
+	margin-bottom: 0.75rem;
+	font-size: 1.125rem;
+	font-weight: 600;
+}
+
+.mesa-legal-paragraph,
+.mesa-legal ul {
+	color: var(--color-text-secondary);
+	line-height: 1.8;
+}
+
+.mesa-legal ul {
+	list-style: disc;
+	padding-left: 1.5rem;
+	margin-top: 0.5rem;
+}
+
+@media (max-width: 1023px) {
+	.mesa-container {
+		width: min(100% - 3rem, 44rem);
+	}
+	.mesa-header-home {
+		position: relative;
+	}
+	.mesa-header {
+		padding-block: 1.75rem;
+	}
+	.mesa-nav {
+		display: none;
+	}
+	.mesa-hero-grid {
+		grid-template-columns: 1fr 0.65fr;
+		gap: 1.5rem;
+		padding-block: 1rem 3rem;
+	}
+	.mesa-hero-intro {
+		grid-column: 1 / -1;
+	}
+	.mesa-hero h1 {
+		font-size: clamp(2.35rem, 6vw, 3.5rem);
+	}
+	.mesa-hero-summary {
+		max-width: 36rem;
+		font-size: 1rem;
+	}
+	.mesa-hero-portrait {
+		position: relative;
+		inset: auto;
+		z-index: 0;
+		grid-column: 2;
+		grid-row: 2;
+		align-self: stretch;
+		mask-image: linear-gradient(to bottom, black 70%, transparent);
+		border-radius: 0.5rem 0.5rem 0 0;
+	}
+	.mesa-hero-image {
+		object-position: 50% 15%;
+	}
+	.mesa-hero-form {
+		grid-row: 2;
+		margin-top: 0;
+	}
+	.mesa-ticker ul {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 1rem;
+		text-align: center;
+		font-size: 0.6875rem;
+		letter-spacing: 0.08em;
+	}
+	.mesa-ticker li + li::before {
+		content: none;
+	}
+	.mesa-learn,
+	.mesa-authority {
+		padding-block: 4rem;
+	}
+	.mesa-topics {
+		grid-template-columns: 1fr;
+	}
+	.mesa-topic {
+		padding: 1.75rem;
+	}
+	.mesa-topic-number {
+		margin-bottom: 1.5rem;
+	}
+	.mesa-authority-grid {
+		grid-template-columns: 0.8fr 1fr;
+		gap: 2rem;
+	}
+	.mesa-authority-portrait {
+		align-self: start;
+	}
+	.mesa-footer-bottom {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+}
+
+@media (max-width: 639px) {
+	.mesa-container {
+		width: calc(100% - 2.5rem);
+	}
+	.mesa-mark-host {
+		font-size: 0.9375rem;
+	}
+	.mesa-hero-grid {
+		grid-template-columns: 1fr 0.8fr;
+		gap: 1.25rem;
+		padding-top: 0.5rem;
+	}
+	.mesa-hero-intro {
+		display: contents;
+	}
+	.mesa-hero h1 {
+		grid-column: 1 / -1;
+		font-size: clamp(2.125rem, 8.9vw, 3rem);
+	}
+	.mesa-hero-summary {
+		grid-column: 1;
+		grid-row: 2;
+		max-width: none;
+		margin-top: 0;
+		font-size: 0.9375rem;
+		line-height: 1.6;
+	}
+	.mesa-hero-portrait {
+		grid-column: 2;
+		grid-row: 2;
+		min-height: 13rem;
+		mask-image: linear-gradient(to bottom, black 85%, transparent);
+	}
+	.mesa-hero-image {
+		object-position: 50% 20%;
+	}
+	.mesa-hero-form {
+		grid-column: 1 / -1;
+		grid-row: 3;
+		max-width: none;
+		margin-top: 0.5rem;
+	}
+	.mesa-section-intro {
+		text-align: left;
+		margin-bottom: 2rem;
+	}
+	.mesa-authority-grid {
+		grid-template-columns: 1fr;
+		gap: 2.5rem;
+	}
+	.mesa-authority-portrait {
+		aspect-ratio: 1;
+	}
+	.mesa-authority-copy {
+		max-width: none;
+	}
+	.mesa-authority-cta .mesa-button {
+		width: 100%;
+		font-size: 1rem;
+	}
+	.mesa-footer-top {
+		flex-direction: column;
+		gap: 1.5rem;
+	}
+	.mesa-footer-links {
+		justify-content: start;
+	}
+}
+
+.mesa-learn ::selection {
+	background: var(--color-gold-light);
+	color: var(--color-paper-ink);
+}
+
+@media (max-width: 639px) {
+	.mesa-site [data-float-wa] {
+		display: none;
+	}
+}

@@ -1,0 +1,202 @@
+---
+import { splitHighlight } from "../../lib/text";
+import Icon from "../shared/Icon.astro";
+import SectionPlate from "../shared/SectionPlate.astro";
+
+interface Props {
+	/** Número da placa desta seção. Vem de `index.astro`, que conta só as
+	 *  seções realmente renderizadas — hardcoded aqui, uma seção opcional
+	 *  ausente abriria um buraco na espinha (…03, 05…). */
+	plate: number;
+	mechanism: {
+		eyebrow?: string;
+		headline: string;
+		highlight?: string;
+		intro?: string;
+		formula?: string;
+		pillars: Array<{
+			icon?: string;
+			titulo: string;
+			resumo?: string;
+			descricao: string;
+		}>;
+	};
+}
+
+const { plate, mechanism: m } = Astro.props;
+const { pre, mid, post } = splitHighlight(m.headline, m.highlight);
+
+// Parse "A + B + C = D" into operand chips + a result chip (decorative).
+let formulaInputs: string[] = [];
+let formulaResult = "";
+if (m.formula?.includes("=")) {
+	const [lhs, rhs] = m.formula.split("=");
+	formulaInputs = lhs
+		.split("+")
+		.map((s) => s.trim())
+		.filter(Boolean);
+	formulaResult = rhs.trim();
+}
+---
+
+<section
+	id="metodo"
+	class="band-base scroll-mt-24 px-4 py-section sm:px-6 lg:px-8"
+>
+	<div class="mx-auto max-w-5xl">
+		<div class="flex flex-col gap-4 text-center" data-reveal="up">
+			<SectionPlate index={plate} eyebrow={m.eyebrow} align="center" />
+			<h2
+				class="font-display text-h2 font-extrabold text-balance text-text-primary"
+			>
+				{pre}{mid && <span class="text-gradient-gold">{mid}</span>}{post}
+			</h2>
+			{
+				m.intro && (
+					<p class="mx-auto max-w-prose text-lg leading-relaxed text-pretty text-text-secondary">
+						{m.intro}
+					</p>
+				)
+			}
+		</div>
+
+		{
+			formulaInputs.length > 0 && (
+				<div
+					class="mt-12 flex flex-wrap items-center justify-center gap-3 text-sm font-semibold sm:text-base"
+					aria-hidden="true"
+					data-reveal="scale"
+					data-formula-stagger
+				>
+					{formulaInputs.map((input, i) => (
+						<>
+							{i > 0 && <span class="text-2xl font-light text-gold/70">+</span>}
+							<span class="rounded-full border border-gold/30 bg-navy/40 px-4 py-2 text-text-primary">
+								{input}
+							</span>
+						</>
+					))}
+					{formulaResult && (
+						<>
+							<span class="text-2xl font-light text-gold/70">=</span>
+							<span class="gold-glow rounded-full border border-gold bg-gold px-5 py-2 font-bold text-navy">
+								{formulaResult}
+							</span>
+						</>
+					)}
+				</div>
+			)
+		}
+
+		<div class="mt-14" data-mechanism data-reveal="up">
+			<div
+				class="flex flex-wrap justify-center gap-2"
+				role="tablist"
+				aria-label="Pilares do método"
+			>
+				{
+					m.pillars.map((pillar, i) => (
+						<button
+							type="button"
+							role="tab"
+							id={`mech-tab-${i}`}
+							aria-controls={`mech-panel-${i}`}
+							aria-selected={i === 0 ? "true" : "false"}
+							tabindex={i === 0 ? "0" : "-1"}
+							data-tab={i}
+							class="btn-base h-auto max-w-full min-w-0 rounded-full border border-gold/20 bg-navy-light/50 px-4 py-2 text-center text-wrap text-text-secondary sm:px-5 aria-selected:border-gold aria-selected:bg-gold/15 aria-selected:text-gold-light"
+						>
+							{pillar.icon && <Icon name={pillar.icon} class="h-4 w-4" />}
+							{pillar.titulo}
+						</button>
+					))
+				}
+			</div>
+
+			<div class="mt-8">
+				{
+					m.pillars.map((pillar, i) => (
+						<div
+							role="tabpanel"
+							id={`mech-panel-${i}`}
+							aria-labelledby={`mech-tab-${i}`}
+							data-tabpanel={i}
+							hidden={i !== 0}
+							class="glass-card-quiet card-glow-hover rounded-plate border-t-2 border-t-gold p-6 md:p-8"
+						>
+							<div class="flex items-start gap-4">
+								{pillar.icon && (
+									<span
+										class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold"
+										aria-hidden="true"
+									>
+										<Icon name={pillar.icon} class="h-6 w-6" />
+									</span>
+								)}
+								<div>
+									<h3 class="font-display text-2xl font-semibold leading-snug text-text-primary">
+										{pillar.titulo}
+									</h3>
+									{pillar.resumo && (
+										<p class="mt-1 font-medium text-gold-light">
+											{pillar.resumo}
+										</p>
+									)}
+								</div>
+							</div>
+							<p class="mt-4 leading-relaxed text-pretty text-text-secondary">
+								{pillar.descricao}
+							</p>
+						</div>
+					))
+				}
+			</div>
+		</div>
+	</div>
+</section>
+
+<script>
+	// Mechanism pillar tabs — progressive enhancement. No-JS shows all panels
+	// stacked (CSS only hides [data-tabpanel][hidden] under .js). Roving tabindex
+	// + arrow-key nav for accessibility.
+	const root = document.querySelector<HTMLElement>("[data-mechanism]");
+	if (root) {
+		const tabs = Array.from(
+			root.querySelectorAll<HTMLButtonElement>("[data-tab]"),
+		);
+		const panels = Array.from(
+			root.querySelectorAll<HTMLElement>("[data-tabpanel]"),
+		);
+
+		const select = (index: number, focus = false) => {
+			tabs.forEach((tab, i) => {
+				const active = i === index;
+				tab.setAttribute("aria-selected", active ? "true" : "false");
+				tab.tabIndex = active ? 0 : -1;
+				if (active && focus) tab.focus();
+			});
+			panels.forEach((panel, i) => {
+				panel.hidden = i !== index;
+			});
+		};
+
+		tabs.forEach((tab, i) => {
+			tab.addEventListener("click", () => select(i));
+			tab.addEventListener("keydown", (e) => {
+				if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+					e.preventDefault();
+					select((i + 1) % tabs.length, true);
+				} else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+					e.preventDefault();
+					select((i - 1 + tabs.length) % tabs.length, true);
+				} else if (e.key === "Home") {
+					e.preventDefault();
+					select(0, true);
+				} else if (e.key === "End") {
+					e.preventDefault();
+					select(tabs.length - 1, true);
+				}
+			});
+		});
+	}
+</script>

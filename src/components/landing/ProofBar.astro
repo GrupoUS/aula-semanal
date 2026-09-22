@@ -1,0 +1,64 @@
+---
+// Faixa de credenciais logo abaixo do hero — registro v2: banda crimson
+// full-bleed com marquee. Crimson aqui é estrutura (faixa de credenciais),
+// nunca CTA. O marquee é enhancement: sem JS, ou sob prefers-reduced-motion,
+// a lista simplesmente quebra linha e continua legível.
+import Icon from "../shared/Icon.astro";
+
+interface Props {
+	proofBar: {
+		items: Array<{ icon?: string; label: string; note?: string }>;
+	};
+}
+
+const { proofBar } = Astro.props;
+---
+
+<section
+	class="relative isolate overflow-hidden bg-crimson"
+	aria-label="Por que participar"
+>
+	{/* Hachura + wash: dá textura à banda chapada sem introduzir cor nova. */}
+	<div
+		class="pointer-events-none absolute inset-0 -z-10 bg-[repeating-linear-gradient(115deg,color-mix(in_srgb,var(--color-text-primary)_6%,transparent)_0_2px,transparent_2px_13px)]"
+		aria-hidden="true"
+	>
+	</div>
+	<div
+		class="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-r from-crimson-dark/85 via-transparent to-crimson-bright/40"
+		aria-hidden="true"
+	>
+	</div>
+
+	<ul
+		class="m-0 list-none gap-x-12 gap-y-3 px-4 py-5 sm:px-6 lg:px-8"
+		style="--marquee-dur: 34s; --marquee-gap: 3rem"
+		data-marquee
+		role="list"
+	>
+		{
+			proofBar.items.map((item, i) => (
+				<li class="flex shrink-0 items-center gap-3">
+					<span
+						class="text-text-primary/65 font-display text-xs font-bold tabular-nums"
+						aria-hidden="true"
+					>
+						{String(i + 1).padStart(2, "0")}
+					</span>
+					<Icon
+						name={item.icon ?? "check"}
+						class="text-text-primary/70 h-4 w-4 shrink-0"
+					/>
+					<span class="text-text-primary text-xs font-semibold uppercase tracking-[0.16em]">
+						{item.label}
+						{item.note && (
+							<span class="text-text-primary/90 ml-2 font-medium normal-case tracking-normal">
+								{item.note}
+							</span>
+						)}
+					</span>
+				</li>
+			))
+		}
+	</ul>
+</section>

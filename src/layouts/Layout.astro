@@ -1,0 +1,400 @@
+---
+import { Font } from "astro:assets";
+import { getEntry } from "astro:content";
+import CookieConsent from "../components/landing/CookieConsent.astro";
+import ScrollProgress from "../components/landing/ScrollProgress.astro";
+import Footer from "../components/layout/Footer.astro";
+import Header from "../components/layout/Header.astro";
+import WhatsAppFloatingButton from "../components/shared/WhatsAppFloatingButton.astro";
+import { CONSENT_KEY } from "../lib/consent";
+import { WHATSAPP_SDR_E164, whatsappUrlBase } from "../lib/whatsapp";
+import "../styles/global.css";
+
+/**
+ * O espaço do chrome inferior é reservado no <body> por `--bottom-stack-h`
+ * (medida publicada pelo motion.ts), não mais por uma prop `hasBottomBar` com
+ * um `5rem` literal. O padding é do body e não da página porque o Footer é
+ * irmão do conteúdo: um padding dentro do wrapper da página deixava a última
+ * linha do rodapé coberta pela barra.
+ *
+ * A presença do chrome é inferida do slot `bottom-cta`: quem monta um CTA fixo
+ * declara isso montando-o, e não passando um booleano em paralelo que podia
+ * dessincronizar.
+ */
+export interface Props {
+	title: string;
+	description: string;
+	ogImage?: string;
+	canonical?: string;
+	activeNav?: string;
+	breadcrumbs?: Array<{ name: string; url: string }>;
+	whatsappMessage?: string;
+	noindex?: boolean;
+	jsonLd?: Record<string, unknown> | Array<Record<string, unknown>>;
+	/** Disclaimer legal do produto (SSOT: legal.disclaimer no JSON de conteúdo).
+	 *  Repassado ao Footer para manter o aviso do produto na mesma fonte. */
+	legalDisclaimer?: string;
+}
+
+const product = await getEntry("products", "aula-semanal");
+if (!product) throw new Error("Product aula-semanal not found");
+const content = product.data;
+
+const {
+	title,
+	description,
+	ogImage = content.seo.ogImage,
+	canonical,
+	activeNav,
+	breadcrumbs,
+	whatsappMessage,
+	noindex = false,
+	jsonLd,
+	legalDisclaimer,
+} = Astro.props;
+
+// Domínio de produção (Vercel): aulaotb.gpus.com.br. Astro.site vem de astro.config.mjs.
+const FALLBACK_SITE = "https://aulaotb.gpus.com.br";
+const site = Astro.site?.toString().replace(/\/$/, "") ?? FALLBACK_SITE;
+const pageUrl =
+	canonical ??
+	new URL(Astro.url.pathname, Astro.site ?? FALLBACK_SITE).toString();
+const absoluteOgImage = ogImage.startsWith("http")
+	? ogImage
+	: `${site}${ogImage}`;
+
+// Tracking (IDs públicos client-side). Pixel já tem default; GA4 entra quando o ID existir.
+// Sem fallback hardcoded de propósito: um ID default é o ID de OUTRA landing do
+// Grupo US, e um deploy sem env configurado mandaria os eventos para a conta
+// errada. Vazio = Pixel desligado (todo o bloco abaixo é condicional).
+const FB_PIXEL_ID =
+	(import.meta.env.PUBLIC_FB_PIXEL_ID as string | undefined) ?? "";
+const GA4_ID = (import.meta.env.PUBLIC_GA4_ID as string | undefined) ?? "";
+
+// Só o init aqui; o PageView é disparado pelo gate de consentimento abaixo
+// (Consent Mode opt-out) para deduplicar com o beacon CAPI via event_id.
+const pixelScript = FB_PIXEL_ID
+	? `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${FB_PIXEL_ID}');`
+	: "";
+
+// PageView dual-channel (Pixel + beacon CAPI) com consent gate opt-out.
+// DEVE ser injetado via set:html (igual ao init); como filho `{`...`}` o Astro
+// emite a string verbatim e a IIFE nunca executa (PageView não dispara).
+const pageViewScript = FB_PIXEL_ID
+	? `(function(){try{var KEY="${CONSENT_KEY}";var choice=null;try{choice=localStorage.getItem(KEY);}catch(e){}if(typeof fbq!=="function")return;if(choice==="revoked"){fbq("consent","revoke");return;}var eid=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now());fbq("track","PageView",{},{eventID:eid});try{fetch("/api/track",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({eventId:eid,eventSourceUrl:location.href}),keepalive:true}).catch(function(){});}catch(e){}}catch(e){}})();`
+	: "";
+
+// Roda inline no <head>, antes de qualquer paint. `data-consent-pending` é lido
+// pelo motion.ts para decidir se a linha do aviso pode abrir.
+const bootScript = `document.documentElement.classList.add("js");try{if(!localStorage.getItem("${CONSENT_KEY}"))document.documentElement.setAttribute("data-consent-pending","");}catch(e){}`;
+
+// Só as páginas que montam um CTA fixo têm chrome inferior — é o que decide a
+// reserva de fallback sem JS.
+const hasBottomChrome = Astro.slots.has("bottom-cta");
+
+const ga4Loader = GA4_ID
+	? `https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`
+	: "";
+const ga4Script = GA4_ID
+	? `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA4_ID}');`
+	: "";
+
+const organizationJsonLd = {
+	"@context": "https://schema.org",
+	"@type": "EducationalOrganization",
+	name: content.shell.organizationName,
+	url: site,
+	logo: `${site}/images/na-mesa-mark.svg`,
+	description: content.shell.organizationDescription,
+	founder: {
+		"@type": "Person",
+		name: "Dra. Sacha Gualberto",
+		sameAs: ["https://instagram.com/drasachagualberto"],
+	},
+	contactPoint: {
+		"@type": "ContactPoint",
+		telephone: `+${WHATSAPP_SDR_E164}`,
+		contactType: "sales",
+		areaServed: "BR",
+		availableLanguage: ["pt-BR"],
+	},
+	sameAs: ["https://instagram.com/drasachagualberto", whatsappUrlBase],
+};
+
+const breadcrumbJsonLd = breadcrumbs?.length
+	? {
+			"@context": "https://schema.org",
+			"@type": "BreadcrumbList",
+			itemListElement: breadcrumbs.map((item, index) => ({
+				"@type": "ListItem",
+				position: index + 1,
+				name: item.name,
+				item: item.url,
+			})),
+		}
+	: null;
+
+const extraJsonLd = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+const jsonLdPayload = [
+	organizationJsonLd,
+	...(breadcrumbJsonLd ? [breadcrumbJsonLd] : []),
+	...extraJsonLd,
+];
+---
+
+<!doctype html>
+<html lang="pt-BR" class:list={[hasBottomChrome && "has-bottom-chrome"]}>
+	<head>
+		<!-- Google Tag Manager -->
+		<script is:inline>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+		new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+		j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+		'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+		})(window,document,'script','dataLayer','GTM-MVQW6VLD');</script>
+		<!-- End Google Tag Manager -->
+		{/* Marca `.js` e o estado de consentimento ANTES do primeiro paint: sem
+		    isso a linha do aviso abriria depois da hidratação, com flash. */}
+		<script is:inline set:html={bootScript} />
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		{/* meta theme-color cannot read CSS variables; literal MUST mirror --color-ink-950 in src/styles/global.css @theme (a cor de fundo real do <body>). */}
+		<meta name="theme-color" content="#081c2a" />
+		<meta name="generator" content={Astro.generator} />
+
+		{/* Meta Pixel (público) — init + PageView, ambos via set:html (JS
+		    executável). Consent Mode opt-out + dedup CAPI via event_id. Lead no submit. */}
+		{pixelScript && <script is:inline set:html={pixelScript} />}
+		{pageViewScript && <script is:inline set:html={pageViewScript} />}
+		{FB_PIXEL_ID && (
+			<noscript>
+				<img
+					height="1"
+					width="1"
+					style="display:none"
+					src={`https://www.facebook.com/tr?id=${FB_PIXEL_ID}&ev=PageView&noscript=1`}
+					alt=""
+				/>
+			</noscript>
+		)}
+
+		{/* Google Analytics 4 — só quando PUBLIC_GA4_ID estiver definido. */}
+		{GA4_ID && <script is:inline async src={ga4Loader} />}
+		{ga4Script && <script is:inline set:html={ga4Script} />}
+
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<link rel="canonical" href={pageUrl} />
+		<meta
+			name="robots"
+			content={noindex ? "noindex, nofollow" : "index, follow"}
+		/>
+
+		<link rel="icon" type="image/svg+xml" href="/favicon-mesa.svg" />
+
+		{/* Astro Fonts API — Sora (LCP / display) preloaded; Inter swap-only. */}
+		<Font cssVariable="--font-sora" />
+		<Font cssVariable="--font-inter" preload />
+
+		<meta property="og:type" content="website" />
+		<meta property="og:locale" content="pt_BR" />
+		<meta property="og:site_name" content={content.shell.brand.name} />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:image" content={absoluteOgImage} />
+		<meta property="og:url" content={pageUrl} />
+
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={absoluteOgImage} />
+
+		<script
+			type="application/ld+json"
+			is:inline
+			set:html={JSON.stringify(jsonLdPayload)}
+		/>
+
+		{/* Noscript fallback: reveal content if the js-class script never runs. */}
+		<noscript>
+			<style>
+				[data-reveal],
+				[data-enter] {
+					opacity: 1 !important;
+					animation: none !important;
+					transform: none !important;
+				}
+				/* O CTA fixo sem JS é tratado por `html:not(.js)` em global.css
+				   (a linha da pilha nasce aberta); aqui não sobra nada a forçar. */
+			</style>
+		</noscript>
+	</head>
+
+	<body class="mesa-site bg-ink-950 font-sans text-text-primary antialiased">
+		<!-- Google Tag Manager (noscript) -->
+		<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MVQW6VLD"
+		height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+		<!-- End Google Tag Manager (noscript) -->
+		<a href="#conteudo-principal" class="skip-link">
+			Pular para o conteúdo principal
+		</a>
+
+		<ScrollProgress />
+
+		<Header shell={content.shell} activeNav={activeNav} />
+
+		<main id="conteudo-principal" tabindex="-1">
+			<slot />
+		</main>
+
+		<WhatsAppFloatingButton message={whatsappMessage} />
+
+		<Footer shell={content.shell} legal={content.legal} whatsappMessage={content.hero.whatsapp.message} disclaimer={legalDisclaimer} />
+
+		{/* Pilha inferior: TODO elemento fixo ancorado embaixo mora aqui. Ordem =
+		    ordem visual (aviso em cima, CTA colado no rodapé da viewport) e =
+		    ordem do DOM, então a tabulação segue o que se vê (WCAG 1.3.2/2.4.3).
+		    Filhos em fluxo normal não podem se sobrepor — é essa a garantia que
+		    substituiu os offsets 5rem/5.5rem. */}
+		<div id="bottom-chrome">
+			<CookieConsent />
+			<slot name="bottom-cta" />
+		</div>
+
+		<script>
+			// Motor de movimento da landing (reveal, cascata, parallax, tilt,
+			// marquee, chrome inferior e barra de progresso). Contrato de
+			// atributos documentado em src/scripts/motion.ts.
+			import "../scripts/motion.ts";
+
+			// Primeiro toque de campanha em TODA página, não só na landing: até
+			// agora `captureAttribution()` só era chamado pelo script do
+			// formulário, então um link de campanha colado para /termos ou
+			// /politica-de-privacidade não contava como primeira visita — a pessoa
+			// navegava para / e se inscrevia como `direto`.
+			// Idempotente: no-op se já houver registro ou se a URL não tiver UTM.
+			import { captureAttribution } from "../lib/leads/attribution";
+
+			captureAttribution();
+		</script>
+
+		<script>
+			// Shared landing interactions: animated counters + CRO event dispatch
+			// (scroll depth + [data-cro] clicks). All progressive
+			// enhancement, reduced-motion aware, and degrade silently. Selectors that
+			// match nothing on a page (e.g. /termos) make every block a no-op.
+			type WindowWithTrackers = Window & {
+				fbq?: (...args: unknown[]) => void;
+				gtag?: (...args: unknown[]) => void;
+			};
+
+			const prefersReduced =
+				typeof window.matchMedia === "function" &&
+				window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+			const dispatchCro = (
+				name: string,
+				detail: Record<string, unknown> = {},
+			) => {
+				try {
+					window.dispatchEvent(
+						new CustomEvent("cro", { detail: { name, ...detail } }),
+					);
+					const w = window as WindowWithTrackers;
+					w.fbq?.("trackCustom", name, detail);
+					w.gtag?.("event", name, detail);
+				} catch {
+					/* tracking é opcional — nunca bloqueia a UI */
+				}
+			};
+
+			try {
+				// --- Scroll depth (o preenchimento da barra é do motion.ts) ---
+				const depthMarks = [25, 50, 75, 90];
+				const firedDepth = new Set<number>();
+				let ticking = false;
+
+				const onScroll = () => {
+					if (ticking) return;
+					ticking = true;
+					requestAnimationFrame(() => {
+						const doc = document.documentElement;
+						const max = doc.scrollHeight - doc.clientHeight;
+						const progress = max > 0 ? Math.min(1, doc.scrollTop / max) : 0;
+						const pct = progress * 100;
+						for (const mark of depthMarks) {
+							if (pct >= mark && !firedDepth.has(mark)) {
+								firedDepth.add(mark);
+								dispatchCro(`scroll_${mark}`);
+							}
+						}
+						ticking = false;
+					});
+				};
+
+				window.addEventListener("scroll", onScroll, { passive: true });
+				onScroll();
+
+				// --- CRO delegated clicks ---
+				document.addEventListener("click", (e) => {
+					const el = (e.target as HTMLElement | null)?.closest<HTMLElement>(
+						"[data-cro]",
+					);
+					if (el?.dataset.cro) dispatchCro(el.dataset.cro);
+				});
+
+				// --- Animated counters (on visible) ---
+				const counters = Array.from(
+					document.querySelectorAll<HTMLElement>("[data-counter-to]"),
+				);
+				const renderCounter = (el: HTMLElement, value: number) => {
+					const prefix = el.dataset.counterPrefix ?? "";
+					const suffix = el.dataset.counterSuffix ?? "";
+					el.textContent = `${prefix}${Math.round(value).toLocaleString("pt-BR")}${suffix}`;
+				};
+				const runCounter = (el: HTMLElement) => {
+					const target = Number(el.dataset.counterTo ?? "0");
+					// Ratings/decimals carry the fractional part in the suffix (e.g.
+					// value 9 + suffix ",4/10"). Ramping the integer would render a
+					// stream of nonsensical mid-values ("3,4/10"). Land on the final
+					// value instantly for those — and for reduced-motion / NaN.
+					const suffix = el.dataset.counterSuffix ?? "";
+					const isFractionalSuffix = /^[.,]\d/.test(suffix);
+					if (prefersReduced || Number.isNaN(target) || isFractionalSuffix) {
+						renderCounter(el, target || 0);
+						return;
+					}
+					const duration = 1200;
+					let startTs = 0;
+					const step = (ts: number) => {
+						if (!startTs) startTs = ts;
+						const p = Math.min(1, (ts - startTs) / duration);
+						renderCounter(el, target * (1 - Math.pow(1 - p, 3)));
+						if (p < 1) requestAnimationFrame(step);
+					};
+					requestAnimationFrame(step);
+				};
+
+				if (counters.length) {
+					if (typeof IntersectionObserver !== "undefined" && !prefersReduced) {
+						const obs = new IntersectionObserver(
+							(entries, o) => {
+								for (const entry of entries) {
+									if (entry.isIntersecting) {
+										runCounter(entry.target as HTMLElement);
+										o.unobserve(entry.target);
+									}
+								}
+							},
+							{ threshold: 0.4 },
+						);
+						counters.forEach((c) => obs.observe(c));
+					} else {
+						counters.forEach((c) => runCounter(c));
+					}
+				}
+			} catch {
+				/* interações são enhancement — falha silenciosa mantém a página usável */
+			}
+		</script>
+	</body>
+</html>

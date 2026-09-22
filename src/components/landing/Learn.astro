@@ -1,0 +1,26 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+	learn: CollectionEntry<"products">["data"]["learn"];
+}
+const { learn } = Astro.props;
+---
+
+<section id="aula" class="mesa-learn" aria-labelledby="learn-title">
+	<div class="mesa-container">
+		<div class="mesa-section-intro">
+			<h2 id="learn-title">{learn.headline}</h2>
+			<p class="mesa-section-summary">{learn.subheadline}</p>
+		</div>
+		<div class="mesa-topics">
+			{learn.topics.map((topic, index) => (
+				<article class="mesa-topic">
+					<span class="mesa-topic-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+					<h3 class="mesa-topic-title">{topic.titulo}</h3>
+					<p class="mesa-topic-body">{topic.descricao}</p>
+				</article>
+			))}
+		</div>
+	</div>
+</section>

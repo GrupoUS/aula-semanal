@@ -1,0 +1,713 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { whatsappUrlWithText } from "../../lib/whatsapp";
+import Icon from "../shared/Icon.astro";
+
+type Product = CollectionEntry<"products">["data"];
+interface Props {
+	registration: Product["registration"];
+	event: Product["event"];
+	class?: string;
+}
+
+const { registration: r, event: ev, class: className } = Astro.props;
+const f = r.fields;
+const ss = r.successState;
+const es = r.errorState;
+
+// TASK-11 [REQUIRES APPROVAL]: real lead endpoint via env. Empty → WhatsApp fallback.
+const endpoint =
+	((import.meta.env.PUBLIC_FORM_ENDPOINT as string | undefined) ?? "").trim() ||
+	"/api/inscricao";
+const waFallbackUrl = whatsappUrlWithText(r.whatsappFallback.message);
+// Mensagem do painel de erro: ESTÁTICA, sem os dados digitados. Prefixar o
+// ?text= com nome/e-mail/telefone gravaria PII no histórico do navegador e na
+// cadeia de redirect do wa.me — e não recupera nada, porque em toda falha que o
+// servidor enxergou o lead já saiu pelo webhook e pelo CRM (reportDegraded).
+const errorWaUrl = whatsappUrlWithText(es.whatsapp.message);
+const reminderUrl = ss?.reminderWhatsapp
+	? whatsappUrlWithText(ss.reminderWhatsapp.message)
+	: null;
+const talkUrl = ss?.talkWhatsapp
+	? whatsappUrlWithText(ss.talkWhatsapp.message)
+	: null;
+
+const inputClass = "mesa-form-input";
+const labelClass = "mesa-form-label";
+const errorClass = "mesa-field-error mt-1 hidden text-sm text-error";
+---
+
+<div id="inscricao" data-conversion-zone class:list={["mesa-registration scroll-mt-8", className]}>
+	<div class="mesa-form-panel">
+
+		<!-- Form -->
+		<!-- A copy chega ao <script> por data-* porque o script tem `import` e
+		     `define:vars` exigiria `is:inline`. Mesmo padrão do `data-sending-label`
+		     que já existia. `data-wa-fallback` saiu junto com o window.open(). -->
+		<form
+			id="registration-form"
+			novalidate
+			data-endpoint={endpoint}
+			data-sending-label={r.sendingLabel ?? "Enviando..."}
+			data-submit-label={r.submitLabel}
+			data-msg-invalid={es.validationSummary}
+			data-msg-name={es.validation.name}
+			data-msg-email={es.validation.email}
+			data-msg-phone={es.validation.phone}
+			data-msg-consent={es.validation.consent}
+			data-experience-label={f.experiencePayloadLabel}
+			data-revenue-label={f.revenuePayloadLabel}
+		>
+			<div class="space-y-4">
+				<header>
+					<h2 class="mesa-form-heading">
+						{r.headline}
+					</h2>
+					<p class="mesa-form-note">{r.requiredNote}</p>
+				</header>
+
+				<div>
+					<label class={labelClass} for="rf-name">
+						{f.nameLabel} <span class="text-gold" aria-hidden="true">*</span>
+					</label>
+					<input
+						id="rf-name"
+						name="name"
+						type="text"
+						required
+						aria-required="true"
+						autocomplete="name"
+						placeholder={f.namePlaceholder}
+						aria-describedby="err-name"
+						class={inputClass}
+					/>
+					<p id="err-name" class={errorClass} data-error-for="name"></p>
+				</div>
+
+				<div>
+					<label class={labelClass} for="rf-phone">
+						{f.phoneLabel} <span class="text-gold" aria-hidden="true">*</span>
+					</label>
+					<input
+						id="rf-phone"
+						name="phone"
+						type="tel"
+						required
+						aria-required="true"
+						autocomplete="tel"
+						inputmode="tel"
+						placeholder={f.phonePlaceholder}
+						aria-describedby="err-phone"
+						class={inputClass}
+					/>
+					<p id="err-phone" class={errorClass} data-error-for="phone"></p>
+				</div>
+
+				<div>
+					<label class={labelClass} for="rf-email">
+						{f.emailLabel} <span class="text-gold" aria-hidden="true">*</span>
+					</label>
+					<input
+						id="rf-email"
+						name="email"
+						type="email"
+						required
+						aria-required="true"
+						autocomplete="email"
+						inputmode="email"
+						placeholder={f.emailPlaceholder}
+						aria-describedby="err-email"
+						class={inputClass}
+					/>
+					<p id="err-email" class={errorClass} data-error-for="email"></p>
+				</div>
+
+				{([
+					{ name: "experience", label: f.experienceLabel, placeholder: f.experiencePlaceholder, options: f.experienceOptions },
+					{ name: "revenue", label: f.revenueLabel, placeholder: f.revenuePlaceholder, options: f.revenueOptions },
+				]).map((field) => (
+					<div>
+						<label class={labelClass} for={`rf-${field.name}`}>{field.label}</label>
+						<select id={`rf-${field.name}`} name={field.name} class={inputClass}>
+							<option value="">{field.placeholder}</option>
+							{field.options.map((option) => <option value={option}>{option}</option>)}
+						</select>
+					</div>
+				))}
+
+				<div>
+					<label class="mesa-form-consent flex items-start gap-3 text-sm text-text-secondary" for="rf-consent">
+						<input
+							id="rf-consent"
+							name="consent"
+							type="checkbox"
+							required
+							aria-required="true"
+							aria-describedby="err-consent"
+							class="mt-1 h-4 w-4 shrink-0 accent-gold"
+						/>
+						<span>
+							{r.consentText}{" "}
+							<a
+								href={r.privacyHref}
+								class="text-gold underline-offset-2 hover:underline"
+							>
+								{r.privacyLabel}
+							</a>.
+						</span>
+					</label>
+					<p id="err-consent" class={errorClass} data-error-for="consent"></p>
+				</div>
+
+				<button
+					type="submit"
+					data-cro="form_submit_click"
+					data-conversion-zone
+					class="btn-base btn-primary mesa-button w-full rounded-lg min-h-12 px-6 text-base"
+				>
+					{r.submitLabel}
+				</button>
+
+				<p
+					id="form-status"
+					role="status"
+					aria-live="polite"
+					class="text-center text-sm text-text-muted"
+				></p>
+
+				{/* Painel de falha — aparece só quando o endpoint NÃO provou gravação
+				    durável. Fica DENTRO do <form> de propósito: os dados digitados
+				    seguem intactos logo acima e o retry é `type="submit"`, reusando o
+				    mesmo handler. E vem DEPOIS do botão primário na ordem do
+				    documento para que Enter num campo continue acionando o primário,
+				    nunca o retry. */}
+				<div
+					id="registration-error"
+					role="alert"
+					aria-labelledby="registration-error-title"
+					tabindex="-1"
+					hidden
+					class="rounded-xl border border-error/40 bg-error/5 p-4 text-left"
+				>
+					<h3
+						id="registration-error-title"
+						class="font-display text-base font-bold text-error"
+					>
+						{es.title}
+					</h3>
+					<p class="mt-2 text-sm leading-relaxed text-text-secondary">
+						{es.body}
+					</p>
+					<div class="mt-4 flex flex-col gap-2">
+						<button
+							type="submit"
+							data-cro="form_submit_retry"
+							class="btn-base btn-primary w-full rounded-xl min-h-11 px-6 text-sm"
+						>
+							{es.retryLabel}
+						</button>
+						{/* Link real, clicado pela PESSOA. Nunca window.open() depois de
+						    um await — fora do gesto do usuário o popup é bloqueado e o
+						    lead não chega a destino nenhum. */}
+						<a
+							href={errorWaUrl}
+							target="_blank"
+							rel="noopener noreferrer"
+							data-cro="form_error_whatsapp"
+							class="btn-base btn-whatsapp w-full rounded-xl min-h-11 px-6 text-sm"
+						>
+							{es.whatsapp.label}
+						</a>
+					</div>
+				</div>
+			</div>
+		</form>
+
+		<!-- Success panel (revealed by JS after submit) -->
+		<div
+			id="registration-success"
+			role="status"
+			aria-live="polite"
+			tabindex="-1"
+			hidden
+			class="text-center"
+		>
+			<svg
+				class="mx-auto h-12 w-12 text-gold"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				aria-hidden="true"
+			>
+				<path d="M21.801 10A10 10 0 1 1 17 3.335" />
+				<path d="m9 11 3 3L22 4" />
+			</svg>
+			<h2 class="mt-4 font-display text-2xl font-bold text-gold">
+				{r.successTitle}
+			</h2>
+			<p class="mx-auto mt-3 max-w-md leading-relaxed text-text-secondary">
+				{r.successBody}
+			</p>
+
+			<p class="mt-5 inline-flex items-center justify-center gap-2 text-sm font-medium text-text-primary">
+				<Icon name="calendar" class="h-4 w-4 text-gold" />
+				{ev.date} · {ev.format}
+			</p>
+
+			{ss && (
+				<div class="mt-6 flex flex-col items-stretch justify-center gap-3">
+					{ss.group && (
+						<div class="rounded-xl border border-gold/15 bg-navy-light/50 p-4 text-center">
+							{ss.group.title && (
+								<p class="font-display text-lg font-bold text-text-primary">
+									{ss.group.title}
+								</p>
+							)}
+							{ss.group.description && (
+								<p class="mt-1.5 text-sm leading-relaxed text-text-secondary">
+									{ss.group.description}
+								</p>
+							)}
+							<a
+								href={ss.group.href}
+								target="_blank"
+								rel="noopener noreferrer"
+								data-cro="success_join_group"
+								class="btn-base btn-whatsapp mt-4 w-full rounded-xl min-h-12 px-6 text-sm"
+							>
+								<Icon name="users" class="h-4 w-4" />
+								{ss.group.label}
+							</a>
+						</div>
+					)}
+					{reminderUrl && (
+						<a
+							href={reminderUrl}
+							target="_blank"
+							rel="noopener noreferrer"
+							data-cro="success_whatsapp_reminder"
+							class="btn-base btn-whatsapp rounded-xl min-h-11 px-6 text-sm"
+						>
+							{ss.reminderWhatsapp?.label}
+						</a>
+					)}
+				</div>
+			)}
+
+			{ss?.talkWhatsapp && talkUrl && (
+				<p class="mt-5 text-sm text-text-secondary">
+					{ss.talkLabel}{" "}
+					<a
+						href={talkUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+						data-cro="success_whatsapp_talk"
+						class="text-whatsapp underline-offset-2 hover:underline"
+					>
+						{ss.talkWhatsapp.label}
+					</a>
+				</p>
+			)}
+		</div>
+	</div>
+
+	{/* Caminho alternativo PRÉ-envio. Escondido em `failed` (o painel de erro tem
+	    o link certo) e em `confirmed` (o painel de sucesso já tem "Falar com a
+	    Laura") — nunca dois fallbacks de WhatsApp visíveis ao mesmo tempo. */}
+	<p id="form-whatsapp-alt" class="mt-4 text-center text-sm text-text-secondary">
+		<a
+			href={waFallbackUrl}
+			target="_blank"
+			rel="noopener noreferrer"
+			data-cro="form_whatsapp_fallback"
+			class="text-whatsapp underline-offset-2 hover:underline"
+		>
+			{r.whatsappFallback.label}
+		</a>
+	</p>
+</div>
+
+<script>
+	import {
+		captureAttribution,
+		readAttribution,
+	} from "../../lib/leads/attribution";
+
+	// Primeiro toque grava assim que a página carrega — antes de qualquer
+	// interação, porque a UTM só existe na querystring da chegada.
+	captureAttribution();
+
+	const form = document.getElementById(
+		"registration-form",
+	) as HTMLFormElement | null;
+
+	if (form) {
+		const statusEl = document.getElementById("form-status");
+		const successEl = document.getElementById("registration-success");
+		const errorPanel = document.getElementById("registration-error");
+		const altWhatsapp = document.getElementById("form-whatsapp-alt");
+		// `data-cro` desambigua: o painel de erro também tem um type="submit"
+		// (o retry), e um seletor genérico pegaria o errado.
+		const submitBtn = form.querySelector<HTMLButtonElement>(
+			'button[type="submit"][data-cro="form_submit_click"]',
+		);
+		const sendingLabel = form.dataset.sendingLabel ?? "Enviando...";
+		const submitLabel =
+			form.dataset.submitLabel ?? submitBtn?.textContent?.trim() ?? "";
+
+		const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+		/**
+		 * Guarda de COMPILAÇÃO: qualquer chave de PII crua empurrada no dataLayer
+		 * vira erro no `bunx astro check`, antes mesmo do gate de grep
+		 * (`bun run check:pii`). Cinto e suspensório — o dataLayer é lido pelo
+		 * container GTM, que não é gated por consentimento.
+		 */
+		type NoPii = Partial<
+			Record<
+				// As três linhas abaixo são a LISTA DE BANIDAS desta guarda de tipo —
+				// declaração, não uso. O waiver é por linha de propósito: um uso real
+				// de qualquer uma delas em outro lugar continua reprovando no gate.
+				| "lead_name" // pii-gate-allow: chave banida, declarada para proibir
+				| "lead_email" // pii-gate-allow: chave banida, declarada para proibir
+				| "lead_phone" // pii-gate-allow: chave banida, declarada para proibir
+				| "name"
+				| "email"
+				| "phone"
+				| "user_data",
+				never
+			>
+		>;
+		type AnalyticsEvent = { event: string; lead_id?: string } & NoPii;
+
+		type WindowWithTrackers = Window & {
+			dataLayer?: AnalyticsEvent[];
+			fbq?: (...args: unknown[]) => void;
+			gtag?: (...args: unknown[]) => void;
+		};
+		// `detail` carrega só rótulos e NOMES de campo — nunca valores digitados.
+		const cro = (name: string, detail: Record<string, string> = {}) => {
+			try {
+				window.dispatchEvent(
+					new CustomEvent("cro", { detail: { name, ...detail } }),
+				);
+				const w = window as WindowWithTrackers;
+				w.fbq?.("trackCustom", name, detail);
+				w.gtag?.("event", name, detail);
+			} catch {
+				/* tracking opcional */
+			}
+		};
+
+		// form_start — disparado uma vez ao primeiro foco em um campo.
+		let started = false;
+		form.addEventListener("focusin", () => {
+			if (started) return;
+			started = true;
+			cro("form_start");
+		});
+
+		const fieldEl = (name: string) =>
+			form.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${name}"]`);
+		const errEl = (name: string) =>
+			form.querySelector<HTMLElement>(`[data-error-for="${name}"]`);
+
+		const setError = (name: string, msg: string) => {
+			const input = fieldEl(name);
+			const el = errEl(name);
+			if (input) input.setAttribute("aria-invalid", "true");
+			if (el) {
+				el.textContent = msg;
+				el.classList.remove("hidden");
+			}
+		};
+
+		const clearError = (name: string) => {
+			const input = fieldEl(name);
+			const el = errEl(name);
+			if (input) input.removeAttribute("aria-invalid");
+			if (el) {
+				el.textContent = "";
+				el.classList.add("hidden");
+			}
+		};
+
+		const setStatus = (msg: string, isError: boolean) => {
+			if (!statusEl) return;
+			statusEl.textContent = msg;
+			statusEl.classList.toggle("text-error", isError);
+			statusEl.classList.toggle("text-text-muted", !isError);
+		};
+
+		const validate = () => {
+			let firstInvalid: HTMLElement | null = null;
+			const invalidFields: string[] = [];
+			// Mensagens vêm do productJson via data-* (SSOT de conteúdo); antes
+			// eram string literal aqui dentro.
+			const fail = (name: string, msg: string) => {
+				setError(name, msg);
+				invalidFields.push(name);
+				if (!firstInvalid) firstInvalid = fieldEl(name);
+			};
+
+			const name = fieldEl("name")?.value.trim() ?? "";
+			const email = fieldEl("email")?.value.trim() ?? "";
+			const phone = fieldEl("phone")?.value.trim() ?? "";
+			const consent = form.querySelector<HTMLInputElement>('[name="consent"]')?.checked ?? false;
+
+			["name", "email", "phone", "consent"].forEach(clearError);
+
+			if (name.length < 2) fail("name", form.dataset.msgName ?? "");
+			if (!emailRe.test(email)) fail("email", form.dataset.msgEmail ?? "");
+			if (phone.replace(/\D/g, "").length < 10)
+				fail("phone", form.dataset.msgPhone ?? "");
+			if (!consent) fail("consent", form.dataset.msgConsent ?? "");
+
+			return { ok: !firstInvalid, firstInvalid, invalidFields };
+		};
+
+		/**
+		 * Máquina de estados do formulário.
+		 *
+		 * `setState` é o ÚNICO escritor de DOM de estado. Antes, `disabled`, o
+		 * label do botão e o `hidden` do form eram mexidos em três lugares e os
+		 * dois caminhos terminavam em `succeed()` — por isso a flag `submitting`
+		 * e o `disabled` nunca voltavam, e uma falha deixava o formulário morto.
+		 */
+		type FormState =
+			| "idle"
+			| "validating"
+			| "submitting"
+			| "confirmed"
+			| "failed";
+		let state: FormState = "idle";
+
+		const prefersReduced =
+			typeof window.matchMedia === "function" &&
+			window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+		const setState = (next: FormState) => {
+			state = next;
+			const busy = next === "submitting";
+			if (submitBtn) {
+				submitBtn.disabled = busy;
+				submitBtn.textContent = busy ? sendingLabel : submitLabel;
+				// Em `failed` a ação primária é o retry do painel: uma CTA por vez.
+				submitBtn.hidden = next === "failed";
+			}
+			form.setAttribute("aria-busy", busy ? "true" : "false");
+			form.hidden = next === "confirmed";
+			if (errorPanel) errorPanel.hidden = next !== "failed";
+			if (successEl) successEl.hidden = next !== "confirmed";
+			if (altWhatsapp)
+				altWhatsapp.hidden = next === "failed" || next === "confirmed";
+		};
+
+		const reveal = (el: HTMLElement) => {
+			el.focus?.({ preventScroll: true });
+			el.scrollIntoView({
+				behavior: prefersReduced ? "auto" : "smooth",
+				block: "center",
+			});
+		};
+
+		// O erro fica obsoleto assim que a pessoa mexe em qualquer campo.
+		form.addEventListener("input", () => {
+			if (state === "failed") setState("idle");
+		});
+
+		const createUuid = () => {
+			if (typeof globalThis.crypto.randomUUID === "function") {
+				return globalThis.crypto.randomUUID();
+			}
+
+			const bytes = globalThis.crypto.getRandomValues(new Uint8Array(16));
+			bytes[6] = (bytes[6] & 0x0f) | 0x40;
+			bytes[8] = (bytes[8] & 0x3f) | 0x80;
+			const hex = Array.from(bytes, (byte) =>
+				byte.toString(16).padStart(2, "0"),
+			).join("");
+			return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+		};
+
+		const fireGa4Lead = () => {
+			try {
+				const w = window as WindowWithTrackers;
+				w.gtag?.("event", "generate_lead");
+			} catch {
+				/* tracking é opcional — nunca bloqueia o fluxo do lead */
+			}
+		};
+		/**
+		 * Prova de gravação DURÁVEL: contrato explícito do servidor
+		 * (`persisted: true`), nunca inferência sobre o formato do id.
+		 *
+		 * O prefixo `lead_` nasce em scripts/apps-script/Code.gs e pode mudar num
+		 * "Nova versão" do Apps Script, sem passar por este repositório —
+		 * acoplar o browser a ele transformaria toda gravação real em falha
+		 * silenciosa na UI. Devolve o leadId do servidor ou null; NUNCA cai para
+		 * o eventId do cliente (era exatamente essa queda que produzia
+		 * "Inscrição confirmada" sem nada gravado).
+		 */
+		const durableLeadId = (
+			res: Response,
+			body: Record<string, unknown> | null,
+		): string | null => {
+			if (!res.ok || !body || body.ok !== true) return null;
+			const leadId = typeof body.leadId === "string" ? body.leadId.trim() : "";
+			if (!leadId) return null;
+			if (body.persisted === true) return leadId;
+			return null;
+		};
+
+		// Espelha leads-store.ts: corpo não-JSON (HTML de erro da plataforma, 504
+		// do edge) não pode virar exceção genérica e sumir dentro do catch.
+		const readJson = async (
+			res: Response,
+		): Promise<Record<string, unknown> | null> => {
+			try {
+				const text = await res.text();
+				if (!text.trimStart().startsWith("{")) return null;
+				const parsed: unknown = JSON.parse(text);
+				return typeof parsed === "object" && parsed !== null
+					? (parsed as Record<string, unknown>)
+					: null;
+			} catch {
+				return null;
+			}
+		};
+
+		// Union fechado do servidor (inscricao.ts + LeadStoreErrorCode). Allowlist
+		// para um corpo inesperado nunca virar string livre num evento.
+		const STORE_CODES = new Set([
+			"unsupported_media_type",
+			"invalid_json",
+			"invalid_payload",
+			"lead_store_not_configured",
+			"store_unauthorized",
+			"store_timeout",
+			"store_locked",
+			"store_invalid_response",
+			"store_error",
+		]);
+
+		const confirmLead = (leadId: string) => {
+			setState("confirmed");
+			setStatus("", false);
+			const w = window as WindowWithTrackers;
+			w.dataLayer = w.dataLayer || [];
+			// Só o id do lead. Nome/e-mail/telefone NUNCA entram no dataLayer — o
+			// match do Meta já acontece hasheado no servidor (meta-capi.ts).
+			w.dataLayer.push({ event: "lead_submit", lead_id: leadId });
+			fireGa4Lead();
+			cro("form_submit_success");
+			if (successEl) reveal(successEl);
+		};
+
+		const fail = (reason: string, storeCode?: string) => {
+			setState("failed");
+			// A mensagem detalhada mora no painel role="alert". O #form-status fica
+			// limpo para o leitor de tela não ouvir o mesmo texto duas vezes.
+			setStatus("", false);
+			cro(
+				"form_submit_error",
+				storeCode ? { reason, store_code: storeCode } : { reason },
+			);
+			if (errorPanel) reveal(errorPanel);
+		};
+
+		// Acima do budget de 7s do store, com folga para CAPI/webhook em paralelo.
+		// Sem isto uma function pendurada deixa "Enviando..." para sempre.
+		const CLIENT_TIMEOUT_MS = 12000;
+
+		form.addEventListener("submit", async (e) => {
+			e.preventDefault();
+			if (state === "submitting") return;
+
+			setState("validating");
+			const { ok, firstInvalid, invalidFields } = validate();
+			if (!ok) {
+				setState("idle");
+				setStatus(form.dataset.msgInvalid ?? "", true);
+				// Só NOMES de campo — nunca valores digitados.
+				cro("form_validation_error", { fields: invalidFields.join(",") });
+				(firstInvalid as HTMLElement | null)?.focus();
+				return;
+			}
+
+			setState("submitting");
+			setStatus("", false);
+
+			const profession = [
+				{ name: "experience", label: form.dataset.experienceLabel },
+				{ name: "revenue", label: form.dataset.revenueLabel },
+			].flatMap(({ name, label }) => {
+				const value = fieldEl(name)?.value.trim();
+				return value && label ? [`${label}: ${value}`] : [];
+			}).join("; ");
+			const { utm, referrer } = readAttribution();
+			const eventId = createUuid();
+			const payload = {
+				contact: {
+					name: fieldEl("name")?.value.trim() ?? "",
+					email: fieldEl("email")?.value.trim() ?? "",
+					phone: fieldEl("phone")?.value.trim() ?? "",
+					profession: profession || undefined,
+					consentGiven: true,
+					consentTimestamp: new Date().toISOString(),
+				},
+				meta: {
+					utm,
+					referrer: referrer || undefined,
+					userAgent: navigator.userAgent,
+					landingPath: window.location.pathname,
+					eventId,
+				},
+			};
+
+			const endpoint = form.dataset.endpoint ?? "/api/inscricao";
+
+			const controller = new AbortController();
+			const timer = setTimeout(() => controller.abort(), CLIENT_TIMEOUT_MS);
+			try {
+				const res = await fetch(endpoint, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(payload),
+					signal: controller.signal,
+				});
+				const body = await readJson(res);
+				const leadId = durableLeadId(res, body);
+				if (leadId) {
+					confirmLead(leadId);
+					return;
+				}
+				// Retry é seguro por construção: `capture` é upsert por e-mail, então
+				// uma segunda tentativa de uma gravação que deu certo mas estourou o
+				// timeout devolve o mesmo leadId com `created: false` e confirma.
+				const rawCode = typeof body?.error === "string" ? body.error : undefined;
+				fail(
+					!res.ok
+						? `http_${res.status}`
+						: body
+							? "not_persisted"
+							: "invalid_response",
+					rawCode && STORE_CODES.has(rawCode) ? rawCode : undefined,
+				);
+			} catch (err) {
+				// Sem console.warn com o objeto de erro: a mensagem é entrada não
+				// controlada e o gate de PII trata console.* como sink.
+				fail(
+					err instanceof DOMException && err.name === "AbortError"
+						? "timeout"
+						: "network",
+				);
+			} finally {
+				clearTimeout(timer);
+			}
+		});
+	}
+</script>
