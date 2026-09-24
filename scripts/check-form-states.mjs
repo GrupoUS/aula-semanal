@@ -104,12 +104,12 @@ const fill = `(async()=>{
   set("name","QA Teste"); set("email","qa@exemplo.local"); set("phone","62999990909");
   set("experience","De 1 a 3 anos"); set("revenue","De R$ 5 mil a R$ 10 mil");
   const c=f.querySelector('[name="consent"]'); c.checked=true; c.dispatchEvent(new Event("change",{bubbles:true}));
-  window.__dl=[]; window.dataLayer=window.dataLayer||[];
+  const record=(entry)=>{const items=JSON.parse(sessionStorage.getItem("__qa_events")||"[]");items.push(entry);sessionStorage.setItem("__qa_events",JSON.stringify(items));};
+  window.dataLayer=window.dataLayer||[];
   const orig=window.dataLayer.push.bind(window.dataLayer);
-  window.dataLayer.push=(o)=>{window.__dl.push(o);return orig(o);};
-  window.__ga=[]; window.gtag=(...a)=>window.__ga.push(a);
+  window.dataLayer.push=(o)=>{record({dl:{event:o.event,lead_id:o.lead_id}});return orig(o);};
+  window.gtag=(...a)=>record({ga:a});
   f.querySelector('button[data-cro="form_submit_click"]').click();
-  await new Promise(r=>setTimeout(r,1200));
   return 1;})()`;
 
 const snapshot = `(()=>{
@@ -117,18 +117,41 @@ const snapshot = `(()=>{
   const err=document.getElementById("registration-error");
   const suc=document.getElementById("registration-success");
   const alt=document.getElementById("form-whatsapp-alt");
-  const btn=f.querySelector('button[data-cro="form_submit_click"]');
-  return {formHidden:f.hidden, errHidden:err.hidden, sucHidden:suc.hidden, altHidden:alt.hidden,
-    btnDisabled:btn.disabled, btnLabel:btn.textContent.trim(), ariaBusy:f.getAttribute("aria-busy"),
-    nameKept:f.querySelector('[name="name"]').value,
-    dl:JSON.stringify(window.__dl||[]), ga:JSON.stringify(window.__ga||[])};})()`;
+  const btn=f?.querySelector('button[data-cro="form_submit_click"]');
+  const events=JSON.parse(sessionStorage.getItem("__qa_events")||"[]");
+  const group=document.querySelector('[data-thank-you-cta]');
+  return {path:location.pathname,marker:sessionStorage.getItem("mesa_inscricao_confirmada"),
+    title:document.title,description:document.querySelector('meta[name="description"]')?.content,
+    neutralHidden:document.querySelector('[data-thank-you-state="neutral"]')?.hidden,
+    confirmedHidden:document.querySelector('[data-thank-you-state="confirmed"]')?.hidden,
+    groupHref:group?.getAttribute("href"),groupLabel:group?.textContent?.trim(),
+    groupVisible:!!group?.getClientRects().length,
+    fallbackGroupVisible:!!document.querySelector('[data-cro="success_join_group"]')?.getClientRects().length,
+    backHref:document.querySelector('[data-thank-you-back]')?.getAttribute("href"),
+    formHidden:f?.hidden,errHidden:err?.hidden,sucHidden:suc?.hidden,altHidden:alt?.hidden,
+    btnDisabled:btn?.disabled,btnLabel:btn?.textContent?.trim(),ariaBusy:f?.getAttribute("aria-busy"),
+    nameKept:f?.querySelector('[name="name"]')?.value,
+    dl:JSON.stringify(events.filter(e=>e.dl).map(e=>e.dl)),
+    ga:JSON.stringify(events.filter(e=>e.ga).map(e=>e.ga))};})()`;
 
-const scenario = async (label, s, formFill = fill) => {
+const scenario = async (
+	label,
+	s,
+	formFill = fill,
+	previousConfirmation = false,
+) => {
 	stub = s;
 	requests = [];
 	await send("Page.navigate", { url: BASE });
 	await sleep(2200);
+	await evalp(
+		'sessionStorage.removeItem("__qa_events");sessionStorage.removeItem("mesa_inscricao_confirmada");1',
+	);
+	if (previousConfirmation) {
+		await evalp('sessionStorage.setItem("mesa_inscricao_confirmada","1");1');
+	}
 	await evalp(formFill);
+	await sleep(2400);
 	const r = await evalp(snapshot);
 	console.log(`\n--- ${label} ---`);
 	return r;
@@ -138,6 +161,7 @@ const scenario = async (label, s, formFill = fill) => {
 await send("Page.navigate", { url: BASE });
 await sleep(2200);
 await evalp(fill.replace("c.checked=true", "c.checked=false"));
+await sleep(250);
 check("sem consentimento: nenhuma captura", requests.length === 0);
 const invalid = await evalp(snapshot);
 check("sem consentimento: sem sucesso", invalid.sucHidden === true);
@@ -154,13 +178,22 @@ let r = await scenario("201 persisted:true", {
 	}),
 });
 check(
-	"sucesso: painel de sucesso visível",
-	r.sucHidden === false,
+	"sucesso: navega para a página de obrigado confirmada",
+	/^\/obrigado\/?$/.test(r.path) &&
+		r.confirmedHidden === false &&
+		r.neutralHidden === true,
 	JSON.stringify(r),
 );
-check("sucesso: form escondido", r.formHidden === true);
-check("sucesso: erro escondido", r.errHidden === true);
-check("sucesso: fallback alternativo escondido", r.altHidden === true);
+check(
+	"sucesso: CTA exato do grupo",
+	r.groupHref ===
+		"https://chat.whatsapp.com/CeAhWrPt7D7G7rpHy0uFSY?s=cl&p=i&mlu=4&ilr=4" &&
+		r.groupLabel === "Entrar no grupo vip!",
+);
+check(
+	"sucesso: lead_submit uma vez",
+	(r.dl.match(/lead_submit/g) ?? []).length === 1,
+);
 check(
 	"sucesso: lead_submit com lead_id do servidor",
 	/"lead_id":"lead_abc123"/.test(r.dl),
@@ -172,6 +205,21 @@ check(
 	r.dl,
 );
 check("sucesso: generate_lead disparado", /generate_lead/.test(r.ga), r.ga);
+check(
+	"sucesso: eventos de analytics sem duplicação",
+	(r.ga.match(/generate_lead/g) ?? []).length === 1 &&
+		(r.ga.match(/form_submit_success/g) ?? []).length === 1,
+	r.ga,
+);
+await send("Page.reload");
+await sleep(800);
+const reloaded = await evalp(snapshot);
+check(
+	"recarga: confirmação mantida na mesma aba",
+	/^\/obrigado\/?$/.test(reloaded.path) &&
+		reloaded.confirmedHidden === false &&
+		reloaded.neutralHidden === true,
+);
 const captured = requests[0];
 check("payload: captura única", requests.length === 1);
 check(
@@ -205,7 +253,10 @@ r = await scenario(
 		"",
 	),
 );
-check("opcionais: inscrição confirmada", r.sucHidden === false);
+check(
+	"opcionais: inscrição confirmada",
+	/^\/obrigado\/?$/.test(r.path) && r.confirmedHidden === false,
+);
 check(
 	"opcionais: profession omitido",
 	requests.length === 1 && !("profession" in requests[0].contact),
@@ -231,10 +282,42 @@ check(
 check("503: botão reabilitado", r.btnDisabled === false);
 check("503: NENHUM lead_submit", !/lead_submit/.test(r.dl), r.dl);
 check("503: NENHUM generate_lead", !/generate_lead/.test(r.ga), r.ga);
+check("503: sem navegação", r.path === "/" && r.marker === null);
 check(
 	"503: form_submit_error com motivo",
 	/form_submit_error/.test(r.ga),
 	r.ga,
+);
+
+// O timeout real da planilha não prova que a gravação terminou.
+r = await scenario("502 store_timeout", {
+	code: 502,
+	body: JSON.stringify({ ok: false, persisted: false, error: "store_timeout" }),
+});
+check(
+	"timeout: erro, dados preservados e sem redirecionamento",
+	r.errHidden === false &&
+		r.nameKept === "QA Teste" &&
+		r.path === "/" &&
+		r.marker === null,
+);
+check("timeout: nenhum lead_submit", !/lead_submit/.test(r.dl), r.dl);
+r = await scenario(
+	"502 após inscrição anterior",
+	{
+		code: 502,
+		body: JSON.stringify({
+			ok: false,
+			persisted: false,
+			error: "store_timeout",
+		}),
+	},
+	fill,
+	true,
+);
+check(
+	"timeout: prova anterior descartada no novo envio",
+	r.marker === null && r.path === "/",
 );
 
 // 3. 201 mas sem prova de persistência (persisted ausente + id não-lead_)
@@ -249,11 +332,13 @@ check(
 );
 check("sem prova: SEM painel de sucesso", r.sucHidden === true);
 check("sem prova: NENHUM lead_submit", !/lead_submit/.test(r.dl), r.dl);
+check("sem prova: sem navegação", r.path === "/" && r.marker === null);
 
 // 4. Corpo não-JSON
 r = await scenario("502 com HTML", { code: 502, body: "<html>gateway</html>" });
 check("HTML: painel de ERRO visível", r.errHidden === false, JSON.stringify(r));
 check("HTML: NENHUM lead_submit", !/lead_submit/.test(r.dl), r.dl);
+check("HTML: sem navegação", r.path === "/" && r.marker === null);
 
 // 5. Mesmo um id lead_ não substitui confirmação explícita de persistência.
 r = await scenario("201 sem persisted mas leadId lead_", {
@@ -267,6 +352,48 @@ check(
 );
 
 check("sem persisted: nenhum lead_submit", !/lead_submit/.test(r.dl));
+check("sem persisted: sem navegação", r.path === "/" && r.marker === null);
+
+const storageBlocked = fill.replace(
+	"  f.querySelector('button[data-cro=\"form_submit_click\"]').click();",
+	`  const setItem=Storage.prototype.setItem;
+  Storage.prototype.setItem=function(key,value){
+    if(key==="mesa_inscricao_confirmada")throw new DOMException("bloqueado","SecurityError");
+    return setItem.call(this,key,value);
+  };
+  f.querySelector('button[data-cro="form_submit_click"]').click();`,
+);
+r = await scenario(
+	"201 com storage bloqueado",
+	{
+		code: 201,
+		body: JSON.stringify({ ok: true, persisted: true, leadId: "lead_storage" }),
+	},
+	storageBlocked,
+);
+check(
+	"storage bloqueado: painel de sucesso e grupo sem navegação",
+	r.path === "/" &&
+		r.marker === null &&
+		r.sucHidden === false &&
+		r.fallbackGroupVisible,
+);
+
+await send("Page.navigate", { url: new URL("/obrigado", BASE).href });
+await sleep(1000);
+const direct = await evalp(snapshot);
+check(
+	"acesso direto: orientação neutra sem convite",
+	/^\/obrigado\/?$/.test(direct.path) &&
+		direct.neutralHidden === false &&
+		direct.confirmedHidden === true &&
+		direct.groupVisible === false &&
+		direct.backHref === "/#inscricao" &&
+		!/confirmad|você está na lista/i.test(
+			`${direct.title} ${direct.description}`,
+		),
+	JSON.stringify(direct),
+);
 
 ws.close();
 chrome.kill();

@@ -330,11 +330,22 @@ const errorClass = "mesa-field-error mt-1 hidden text-sm text-error";
 	</p>
 </div>
 
+<style>
+	a[data-cro="success_join_group"] {
+		color: var(--color-navy);
+	}
+</style>
+
 <script>
 	import {
 		captureAttribution,
 		readAttribution,
 	} from "../../lib/leads/attribution";
+	import {
+		THANK_YOU_MARKER_KEY,
+		THANK_YOU_MARKER_VALUE,
+		THANK_YOU_PATH,
+	} from "../../lib/thank-you";
 
 	// Primeiro toque grava assim que a página carrega — antes de qualquer
 	// interação, porque a UTM só existe na querystring da chegada.
@@ -381,7 +392,12 @@ const errorClass = "mesa-field-error mt-1 hidden text-sm text-error";
 				never
 			>
 		>;
-		type AnalyticsEvent = { event: string; lead_id?: string } & NoPii;
+		type AnalyticsEvent = {
+			event: string;
+			lead_id?: string;
+			eventCallback?: () => void;
+			eventTimeout?: number;
+		} & NoPii;
 
 		type WindowWithTrackers = Window & {
 			dataLayer?: AnalyticsEvent[];
@@ -599,12 +615,34 @@ const errorClass = "mesa-field-error mt-1 hidden text-sm text-error";
 			setStatus("", false);
 			const w = window as WindowWithTrackers;
 			w.dataLayer = w.dataLayer || [];
-			// Só o id do lead. Nome/e-mail/telefone NUNCA entram no dataLayer — o
-			// match do Meta já acontece hasheado no servidor (meta-capi.ts).
-			w.dataLayer.push({ event: "lead_submit", lead_id: leadId });
+			let canNavigate = false;
+			try {
+				sessionStorage.setItem(THANK_YOU_MARKER_KEY, THANK_YOU_MARKER_VALUE);
+				canNavigate = true;
+			} catch {
+				// Storage bloqueado: manter o painel de sucesso na landing.
+			}
 			fireGa4Lead();
 			cro("form_submit_success");
 			if (successEl) reveal(successEl);
+			let navigated = false;
+			const go = () => {
+				if (navigated) return;
+				navigated = true;
+				window.location.assign(THANK_YOU_PATH);
+			};
+			// Só o id do lead. Nome/e-mail/telefone NUNCA entram no dataLayer — o
+			// match do Meta já acontece hasheado no servidor (meta-capi.ts).
+			try {
+				w.dataLayer.push({
+					event: "lead_submit",
+					lead_id: leadId,
+					...(canNavigate ? { eventCallback: go, eventTimeout: 1500 } : {}),
+				});
+			} catch {
+				// Tracking opcional nunca desfaz uma inscrição persistida.
+			}
+			if (canNavigate) setTimeout(go, 1500);
 		};
 
 		const fail = (reason: string, storeCode?: string) => {
@@ -638,6 +676,11 @@ const errorClass = "mesa-field-error mt-1 hidden text-sm text-error";
 				return;
 			}
 
+			try {
+				sessionStorage.removeItem(THANK_YOU_MARKER_KEY);
+			} catch {
+				// Storage indisponível: o erro e o fallback continuam no formulário.
+			}
 			setState("submitting");
 			setStatus("", false);
 
