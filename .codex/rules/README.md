@@ -3,7 +3,7 @@ paths:
   - ".codex/rules/README.md"
 ---
 
-# Camada de regras — `aula-otb` (Codex)
+# Camada de regras — (Codex)
 
 Este diretório existe para o Codex CLI, e é deliberadamente **um índice, não uma segunda cópia**.
 As regras de domínio deste repositório vivem em `.claude/rules/`, em uma cópia só. Duas autoridades
