@@ -94,7 +94,7 @@ Bloco para o `.env.example` / `.env.local`:
 SHEETS_WEBAPP_URL=
 # Segredo compartilhado — mesmo valor da Propriedade de Script `SHARED_SECRET`.
 SHEETS_SHARED_SECRET=
-# Opcional: teto por tentativa em ms (default 6000).
+# Opcional: teto por tentativa em ms (default 30000; cobre o cold start do Web App).
 SHEETS_TIMEOUT_MS=
 
 # === Canal degradado ===

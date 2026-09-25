@@ -9,6 +9,7 @@ import {
 	getLeadStoreConfigStatus,
 	LeadStoreError,
 	type LeadStoreErrorCode,
+	pingLeadStore,
 } from "../../lib/server/leads-store";
 import {
 	extractClientIp,
@@ -68,6 +69,34 @@ async function reportDegraded(
 		pushLeadToCrm(lead, code),
 	]);
 }
+
+// Aquecimento do Apps Script: o formulário chama no primeiro foco (form_start)
+// para o cold start do Web App (20–26s medidos) correr enquanto a pessoa
+// digita, e o POST chegar com a instância quente. Sem corpo, sem PII e sem
+// dado na resposta. A janela por instância evita que chamadas repetidas virem
+// uma execução do Apps Script cada.
+const WARM_WINDOW_MS = 60000;
+let lastWarmAt = 0;
+
+export const GET: APIRoute = async () => {
+	if (
+		Date.now() - lastWarmAt >= WARM_WINDOW_MS &&
+		getLeadStoreConfigStatus().configured
+	) {
+		lastWarmAt = Date.now();
+		try {
+			await pingLeadStore();
+		} catch (err) {
+			console.error("[inscricao] warmup_failed", {
+				code: err instanceof LeadStoreError ? err.code : "store_error",
+			});
+		}
+	}
+	return new Response(null, {
+		status: 204,
+		headers: { "Cache-Control": "no-store" },
+	});
+};
 
 export const POST: APIRoute = async ({ request }) => {
 	if (!request.headers.get("content-type")?.includes("application/json")) {

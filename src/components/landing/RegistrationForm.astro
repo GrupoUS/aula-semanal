@@ -424,6 +424,12 @@ const errorClass = "mesa-field-error mt-1 hidden text-sm text-error";
 			if (started) return;
 			started = true;
 			cro("form_start");
+			// Acorda o Apps Script enquanto a pessoa preenche (GET em
+			// /api/inscricao). Best-effort: falha aqui nunca afeta o envio.
+			fetch(form.dataset.endpoint ?? "/api/inscricao", {
+				method: "GET",
+				keepalive: true,
+			}).catch(() => {});
 		});
 
 		const fieldEl = (name: string) =>
@@ -657,9 +663,10 @@ const errorClass = "mesa-field-error mt-1 hidden text-sm text-error";
 			if (errorPanel) reveal(errorPanel);
 		};
 
-		// Acima do budget de 7s do store, com folga para CAPI/webhook em paralelo.
-		// Sem isto uma function pendurada deixa "Enviando..." para sempre.
-		const CLIENT_TIMEOUT_MS = 12000;
+		// Acima do budget de 40s do store (leads-store.ts), com folga para
+		// CAPI/webhook em paralelo. Sem isto uma function pendurada deixa
+		// "Enviando..." para sempre.
+		const CLIENT_TIMEOUT_MS = 50000;
 
 		form.addEventListener("submit", async (e) => {
 			e.preventDefault();

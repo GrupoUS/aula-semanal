@@ -18,11 +18,15 @@ const URL_ENV = "SHEETS_WEBAPP_URL";
 const SECRET_ENV = "SHEETS_SHARED_SECRET";
 const TIMEOUT_ENV = "SHEETS_TIMEOUT_MS";
 
-const DEFAULT_ATTEMPT_MS = 6000;
-// Orçamento TOTAL da operação (1ª tentativa + retry). Mantido abaixo do
-// maxDuration default da Vercel, já que /api/inscricao ainda roda o webhook e
-// a CAPI (6s cada) em paralelo depois desta chamada.
-const DEFAULT_BUDGET_MS = 7000;
+// A 1ª tentativa precisa cobrir o cold start do Apps Script: medido em 20–26s
+// com o Web App frio contra ~2s quente. Com 6s, toda inscrição após o Web App
+// ficar ocioso virava `store_timeout` e o formulário mostrava erro.
+const DEFAULT_ATTEMPT_MS = 30000;
+// Orçamento TOTAL da operação (1ª tentativa + retry). O projeto roda em Fluid
+// compute (maxDuration default 300s); /api/inscricao ainda roda o webhook e a
+// CAPI (6s cada, em paralelo) depois desta chamada. O timeout do formulário
+// (RegistrationForm.astro :: CLIENT_TIMEOUT_MS) precisa ficar acima da soma.
+const DEFAULT_BUDGET_MS = 40000;
 const RETRY_BACKOFF_MS = 400;
 const MIN_RETRY_MS = 1500;
 
