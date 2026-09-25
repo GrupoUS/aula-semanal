@@ -79,9 +79,16 @@ await send("Emulation.setDeviceMetricsOverride", {
 
 let stub = null;
 let requests = [];
+let warmups = 0;
 handlers.push(async (m) => {
 	if (m.method !== "Fetch.requestPaused") return;
 	const { requestId, request } = m.params;
+	// GET = aquecimento do Apps Script ao carregar (não é captura).
+	if (request.method === "GET") {
+		warmups++;
+		await send("Fetch.fulfillRequest", { requestId, responseCode: 204 });
+		return;
+	}
 	requests.push(JSON.parse(request.postData ?? "{}"));
 	if (!stub) {
 		await send("Fetch.failRequest", {
@@ -160,6 +167,8 @@ const scenario = async (
 // Consentimento ausente não deve iniciar captura nem emitir sucesso.
 await send("Page.navigate", { url: BASE });
 await sleep(2200);
+// O cold start do Apps Script (20–35s) precisa começar antes do envio.
+check("aquecimento: GET ao carregar, sem captura", warmups === 1);
 await evalp(fill.replace("c.checked=true", "c.checked=false"));
 await sleep(250);
 check("sem consentimento: nenhuma captura", requests.length === 0);

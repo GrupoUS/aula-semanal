@@ -70,11 +70,10 @@ async function reportDegraded(
 	]);
 }
 
-// Aquecimento do Apps Script: o formulário chama no primeiro foco (form_start)
-// para o cold start do Web App (20–26s medidos) correr enquanto a pessoa
-// digita, e o POST chegar com a instância quente. Sem corpo, sem PII e sem
-// dado na resposta. A janela por instância evita que chamadas repetidas virem
-// uma execução do Apps Script cada.
+// Aquecimento do Apps Script: o formulário chama ao carregar a página para o
+// cold start do Web App (20–35s medidos) correr enquanto a pessoa lê e
+// digita. Sem corpo, sem PII e sem dado na resposta. A janela por instância
+// evita que chamadas repetidas virem uma execução do Apps Script cada.
 const WARM_WINDOW_MS = 60000;
 let lastWarmAt = 0;
 

@@ -18,17 +18,22 @@ const URL_ENV = "SHEETS_WEBAPP_URL";
 const SECRET_ENV = "SHEETS_SHARED_SECRET";
 const TIMEOUT_ENV = "SHEETS_TIMEOUT_MS";
 
-// A 1ª tentativa precisa cobrir o cold start do Apps Script: medido em 20–26s
-// com o Web App frio contra ~2s quente. Com 6s, toda inscrição após o Web App
-// ficar ocioso virava `store_timeout` e o formulário mostrava erro.
+// Falhas do Web App medidas em 2026-09-25, todas transitórias: cold start de
+// 20–35s no /exec; 404 "Página não encontrada" no echo de
+// script.googleusercontent.com; `unauthorized` com o segredo correto sob carga;
+// execução pendurada por 90s+. Quente, a mesma chamada volta em ~2s.
 const DEFAULT_ATTEMPT_MS = 30000;
-// Orçamento TOTAL da operação (1ª tentativa + retry). O projeto roda em Fluid
+// Orçamento TOTAL da operação (todas as tentativas). O projeto roda em Fluid
 // compute (maxDuration default 300s); /api/inscricao ainda roda o webhook e a
 // CAPI (6s cada, em paralelo) depois desta chamada. O timeout do formulário
 // (RegistrationForm.astro :: CLIENT_TIMEOUT_MS) precisa ficar acima da soma.
-const DEFAULT_BUDGET_MS = 40000;
-const RETRY_BACKOFF_MS = 400;
-const MIN_RETRY_MS = 1500;
+const DEFAULT_BUDGET_MS = 55000;
+// Hedging: sem resposta em HEDGE_AFTER_MS, dispara outra chamada em paralelo e
+// fica com a primeira que der certo. Medido no Web App frio: em sequência, as
+// chamadas levaram 20–36s ou falharam; disparadas juntas, uma voltou em 3–6s.
+const HEDGE_AFTER_MS = 5000;
+const MAX_ATTEMPTS = 5;
+const MIN_ATTEMPT_MS = 3000;
 
 /**
  * Versão do contrato do Web App (scripts/apps-script/Code.gs :: API_VERSION).
@@ -99,11 +104,15 @@ function mapRemoteError(error: string | undefined): LeadStoreErrorCode {
 	}
 }
 
-// Erros que não adianta repetir: o segredo continuará errado, o payload
-// continuará inválido. Retentar só gasta orçamento e quota do Apps Script.
-function isRetryable(code: LeadStoreErrorCode): boolean {
-	return code === "store_timeout" || code === "store_locked";
-}
+// Erros que não adianta repetir: payload/ação inválidos continuarão inválidos.
+// `unauthorized` é tolerado UMA vez porque o Web App o devolveu com o segredo
+// correto sob carga; na segunda, o segredo está mesmo errado.
+const FINAL_REMOTE_ERRORS = new Set([
+	"invalid_payload",
+	"invalid_json",
+	"bad_action",
+	"admin_unavailable",
+]);
 
 async function attempt(
 	url: string,
@@ -111,9 +120,13 @@ async function attempt(
 	action: SheetsAction,
 	payload: unknown,
 	timeoutMs: number,
+	cancel?: AbortSignal,
 ): Promise<unknown> {
 	const controller = new AbortController();
 	const timer = setTimeout(() => controller.abort(), timeoutMs);
+	// Outra tentativa em paralelo já venceu: libera esta conexão.
+	const onCancel = () => controller.abort();
+	cancel?.addEventListener("abort", onCancel, { once: true });
 	try {
 		const res = await fetch(url, {
 			method: "POST",
@@ -130,7 +143,7 @@ async function attempt(
 		// /exec, ou exceção não tratada no script. Todos caem aqui.
 		const text = await res.text();
 		if (!text.trimStart().startsWith("{")) {
-			throw new LeadStoreError("store_invalid_response");
+			throw new LeadStoreError("store_invalid_response", `html_${res.status}`);
 		}
 
 		let body: SheetsEnvelope;
@@ -150,9 +163,16 @@ async function attempt(
 		if (err instanceof Error && err.name === "AbortError") {
 			throw new LeadStoreError("store_timeout");
 		}
-		throw new LeadStoreError("store_error", (err as Error)?.name ?? "network");
+		// Só nome e código técnico da causa (ECONNRESET, UND_ERR_SOCKET...).
+		const cause = (err as { cause?: { code?: unknown } })?.cause?.code;
+		const name = (err as Error)?.name ?? "network";
+		throw new LeadStoreError(
+			"store_error",
+			typeof cause === "string" ? `${name}:${cause}` : name,
+		);
 	} finally {
 		clearTimeout(timer);
+		cancel?.removeEventListener("abort", onCancel);
 	}
 }
 
@@ -164,34 +184,90 @@ export async function callSheets<T = unknown>(
 	const secret = getServerEnv(SECRET_ENV);
 	if (!url || !secret) throw new LeadStoreError("lead_store_not_configured");
 
-	const started = Date.now();
 	const perAttempt = attemptMs();
-
-	try {
-		const first = Math.min(perAttempt, DEFAULT_BUDGET_MS);
-		return (await attempt(url, secret, action, payload, first)) as T;
-	} catch (err) {
-		// Auth inclui consumo de token/envio de email: nunca repetir uma mutação.
-		if (action.startsWith("admin")) throw err;
-		const code =
-			err instanceof LeadStoreError ? err.code : ("store_error" as const);
-		if (!isRetryable(code)) throw err;
-
-		const remaining =
-			DEFAULT_BUDGET_MS - (Date.now() - started) - RETRY_BACKOFF_MS;
-		if (remaining < MIN_RETRY_MS) throw err;
-
-		await new Promise((resolve) => setTimeout(resolve, RETRY_BACKOFF_MS));
-		// Retry é seguro porque `capture` é upsert por e-mail (idempotente) e as
-		// demais ações são leitura ou idempotentes por construção.
+	// Auth inclui consumo de token/envio de email: uma tentativa só, nunca em
+	// paralelo nem repetida.
+	if (action.startsWith("admin")) {
 		return (await attempt(
 			url,
 			secret,
 			action,
 			payload,
-			Math.min(perAttempt, remaining),
+			Math.min(perAttempt, DEFAULT_BUDGET_MS),
 		)) as T;
 	}
+
+	// Nas demais ações, tentativas paralelas e repetidas são seguras: `capture`
+	// é upsert por e-mail sob LockService e o resto é leitura ou idempotente.
+	const started = Date.now();
+	const cancel = new AbortController();
+	return new Promise<T>((resolve, reject) => {
+		let hedge: ReturnType<typeof setInterval> | undefined;
+		let launched = 0;
+		let failed = 0;
+		let unauthorized = 0;
+		let settled = false;
+		let lastError = new LeadStoreError("store_timeout");
+
+		const settle = (finish: () => void) => {
+			if (settled) return;
+			settled = true;
+			clearInterval(hedge);
+			cancel.abort();
+			finish();
+		};
+
+		const launch = (): boolean => {
+			const remaining = DEFAULT_BUDGET_MS - (Date.now() - started);
+			if (settled || launched >= MAX_ATTEMPTS || remaining < MIN_ATTEMPT_MS) {
+				return false;
+			}
+			const attemptNo = ++launched;
+			const attemptStarted = Date.now();
+			attempt(
+				url,
+				secret,
+				action,
+				payload,
+				Math.min(perAttempt, remaining),
+				cancel.signal,
+			).then(
+				(data) => settle(() => resolve(data as T)),
+				(err: unknown) => {
+					if (settled) return;
+					const error =
+						err instanceof LeadStoreError
+							? err
+							: new LeadStoreError("store_error");
+					// Sem PII: ação, tentativa, código e detalhe técnico (http_404,
+					// html_200, TypeError:ECONNRESET, código remoto).
+					console.warn("[leads-store] attempt_failed", {
+						action,
+						attempt: attemptNo,
+						code: error.code,
+						detail: error.message,
+						ms: Date.now() - attemptStarted,
+					});
+					failed++;
+					lastError = error;
+					if (error.code === "store_unauthorized") unauthorized++;
+					if (FINAL_REMOTE_ERRORS.has(error.message) || unauthorized >= 2) {
+						settle(() => reject(error));
+						return;
+					}
+					// Falha rápida (404 no echo, HTML) é substituída na hora; sem
+					// substituta possível e nada mais em voo, a operação falhou.
+					if (!launch() && failed === launched) {
+						settle(() => reject(lastError));
+					}
+				},
+			);
+			return true;
+		};
+
+		hedge = setInterval(launch, HEDGE_AFTER_MS);
+		launch();
+	});
 }
 
 // Toda linha que volta passa pelo zod: célula editada à mão na planilha estoura
@@ -244,11 +320,20 @@ function toRemoteQuery(
 export async function captureLead(
 	payload: CapturePayload,
 ): Promise<{ lead: StoredLead; created: boolean }> {
+	const started = Date.now();
 	const data = await callSheets<{ lead: unknown; created: boolean }>(
 		"capture",
 		payload,
 	);
-	return { lead: parseLead(data.lead), created: data.created === true };
+	const lead = parseLead(data.lead);
+	// Uma tentativa que gravou mas perdeu a resposta (timeout, 404 no echo) faz
+	// a seguinte devolver `created: false`. Linha criada depois do início desta
+	// operação ainda é desta inscrição — sem isso o dono do lead não é avisado.
+	const createdAt = Date.parse(lead.createdAt);
+	const created =
+		data.created === true ||
+		(Number.isFinite(createdAt) && createdAt >= started - 2000);
+	return { lead, created };
 }
 
 /** Uma única chamada resolve tudo que o painel precisa por render. */
