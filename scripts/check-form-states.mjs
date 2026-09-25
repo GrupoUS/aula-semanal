@@ -196,7 +196,7 @@ check(
 check(
 	"sucesso: CTA exato do grupo",
 	r.groupHref ===
-		"https://chat.whatsapp.com/CeAhWrPt7D7G7rpHy0uFSY?s=cl&p=i&mlu=4&ilr=4" &&
+		"https://chat.whatsapp.com/JnhXq4xULMY3Rl9VCwLGR7?mode=gi_t" &&
 		r.groupLabel === "Entrar no grupo vip!",
 );
 check(
