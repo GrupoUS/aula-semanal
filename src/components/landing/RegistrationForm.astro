@@ -431,13 +431,6 @@ const errorClass = "mesa-field-error mt-1 hidden text-sm text-error";
 			document.head.append(prefetch);
 		});
 
-		// Acorda o Apps Script já no carregamento: o cold start (20–35s) corre
-		// enquanto a pessoa lê e preenche. Best-effort: falha aqui nunca afeta o
-		// envio (GET em /api/inscricao).
-		fetch(form.dataset.endpoint ?? "/api/inscricao", { method: "GET" }).catch(
-			() => {},
-		);
-
 		const fieldEl = (name: string) =>
 			form.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${name}"]`);
 		const errEl = (name: string) =>
@@ -546,6 +539,29 @@ const errorClass = "mesa-field-error mt-1 hidden text-sm text-error";
 		form.addEventListener("input", () => {
 			if (state === "failed") setState("idle");
 		});
+
+		// Mantém o Apps Script quente enquanto o formulário está aberto: ele
+		// esfria com menos de 60–75s ocioso e o envio frio leva 10–50s (medido).
+		// Um GET ao carregar e a cada 25s por até ~5 min; pausa durante o envio e
+		// para após a confirmação. Best-effort: falha aqui nunca afeta o envio.
+		const WARM_EVERY_MS = 25000;
+		const WARM_MAX = 12;
+		let warmCount = 0;
+		const warm = () => {
+			if (state === "submitting" || document.hidden) return;
+			warmCount++;
+			fetch(form.dataset.endpoint ?? "/api/inscricao", { method: "GET" }).catch(
+				() => {},
+			);
+		};
+		warm();
+		const warmTimer = setInterval(() => {
+			if (state === "confirmed" || warmCount >= WARM_MAX) {
+				clearInterval(warmTimer);
+				return;
+			}
+			warm();
+		}, WARM_EVERY_MS);
 
 		const createUuid = () => {
 			if (typeof globalThis.crypto.randomUUID === "function") {

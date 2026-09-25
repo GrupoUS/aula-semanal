@@ -86,11 +86,11 @@ async function reportDegraded(
 	]);
 }
 
-// Aquecimento do Apps Script: o formulário chama ao carregar a página para o
-// cold start do Web App (20–35s medidos) correr enquanto a pessoa lê e
-// digita. Sem corpo, sem PII e sem dado na resposta. A janela por instância
-// evita que chamadas repetidas virem uma execução do Apps Script cada.
-const WARM_WINDOW_MS = 60000;
+// Aquecimento do Apps Script: o formulário chama ao carregar e a cada 25s
+// enquanto está aberto, porque o Web App esfria com menos de 60–75s ocioso e o
+// envio frio leva 10–50s. Sem corpo, sem PII e sem dado na resposta. A janela
+// por instância limita a um ping a cada 20s, com qualquer número de visitantes.
+const WARM_WINDOW_MS = 20000;
 let lastWarmAt = 0;
 
 export const GET: APIRoute = async () => {

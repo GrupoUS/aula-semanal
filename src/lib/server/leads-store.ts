@@ -32,7 +32,13 @@ const DEFAULT_BUDGET_MS = 55000;
 // fica com a primeira que der certo. Medido no Web App frio: em sequência, as
 // chamadas levaram 20–36s ou falharam; disparadas juntas, uma voltou em 3–6s.
 const HEDGE_AFTER_MS = 5000;
-const MAX_ATTEMPTS = 5;
+// Teto de chamadas EM VOO, não de total: em produção, 5 chamadas paralelas
+// falharam juntas perto dos 30s num cold start, e um teto de total deixava 25s
+// de orçamento sem uso. Falhas são repostas após RETRY_BACKOFF_MS (evita laço
+// apertado se o erro for instantâneo) até o orçamento acabar.
+const MAX_IN_FLIGHT = 4;
+const MAX_ATTEMPTS = 12;
+const RETRY_BACKOFF_MS = 750;
 const MIN_ATTEMPT_MS = 3000;
 
 /**
@@ -105,8 +111,9 @@ function mapRemoteError(error: string | undefined): LeadStoreErrorCode {
 }
 
 // Erros que não adianta repetir: payload/ação inválidos continuarão inválidos.
-// `unauthorized` é tolerado UMA vez porque o Web App o devolveu com o segredo
-// correto sob carga; na segunda, o segredo está mesmo errado.
+// `unauthorized` é tolerado duas vezes porque o Web App o devolveu com o
+// segredo correto sob carga (2 de 4 chamadas simultâneas, enquanto outra deu
+// certo); na terceira, o segredo está mesmo errado.
 const FINAL_REMOTE_ERRORS = new Set([
 	"invalid_payload",
 	"invalid_json",
@@ -185,9 +192,10 @@ export async function callSheets<T = unknown>(
 	if (!url || !secret) throw new LeadStoreError("lead_store_not_configured");
 
 	const perAttempt = attemptMs();
-	// Auth inclui consumo de token/envio de email: uma tentativa só, nunca em
-	// paralelo nem repetida.
-	if (action.startsWith("admin")) {
+	// Uma tentativa só, nunca em paralelo nem repetida: admin consome token e
+	// envia e-mail; ping é aquecimento/saúde, e uma execução já acorda o Web
+	// App — paralelizar só multiplicaria execuções frias.
+	if (action.startsWith("admin") || action === "ping") {
 		return (await attempt(
 			url,
 			secret,
@@ -204,7 +212,7 @@ export async function callSheets<T = unknown>(
 	return new Promise<T>((resolve, reject) => {
 		let hedge: ReturnType<typeof setInterval> | undefined;
 		let launched = 0;
-		let failed = 0;
+		let inFlight = 0;
 		let unauthorized = 0;
 		let settled = false;
 		let lastError = new LeadStoreError("store_timeout");
@@ -219,10 +227,16 @@ export async function callSheets<T = unknown>(
 
 		const launch = (): boolean => {
 			const remaining = DEFAULT_BUDGET_MS - (Date.now() - started);
-			if (settled || launched >= MAX_ATTEMPTS || remaining < MIN_ATTEMPT_MS) {
+			if (
+				settled ||
+				inFlight >= MAX_IN_FLIGHT ||
+				launched >= MAX_ATTEMPTS ||
+				remaining < MIN_ATTEMPT_MS
+			) {
 				return false;
 			}
 			const attemptNo = ++launched;
+			inFlight++;
 			const attemptStarted = Date.now();
 			attempt(
 				url,
@@ -232,8 +246,12 @@ export async function callSheets<T = unknown>(
 				Math.min(perAttempt, remaining),
 				cancel.signal,
 			).then(
-				(data) => settle(() => resolve(data as T)),
+				(data) => {
+					inFlight--;
+					settle(() => resolve(data as T));
+				},
 				(err: unknown) => {
+					inFlight--;
 					if (settled) return;
 					const error =
 						err instanceof LeadStoreError
@@ -248,18 +266,17 @@ export async function callSheets<T = unknown>(
 						detail: error.message,
 						ms: Date.now() - attemptStarted,
 					});
-					failed++;
 					lastError = error;
 					if (error.code === "store_unauthorized") unauthorized++;
-					if (FINAL_REMOTE_ERRORS.has(error.message) || unauthorized >= 2) {
+					if (FINAL_REMOTE_ERRORS.has(error.message) || unauthorized >= 3) {
 						settle(() => reject(error));
 						return;
 					}
-					// Falha rápida (404 no echo, HTML) é substituída na hora; sem
-					// substituta possível e nada mais em voo, a operação falhou.
-					if (!launch() && failed === launched) {
-						settle(() => reject(lastError));
-					}
+					// Repõe a tentativa após uma pausa curta; sem reposição possível
+					// e nada mais em voo, a operação falhou.
+					setTimeout(() => {
+						if (!launch() && inFlight === 0) settle(() => reject(lastError));
+					}, RETRY_BACKOFF_MS);
 				},
 			);
 			return true;

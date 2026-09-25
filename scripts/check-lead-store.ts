@@ -133,14 +133,15 @@ reset([
 assert.equal((await captureLead(payload)).created, true);
 assert.equal(hits, 2);
 
-// 4. `unauthorized` persistente é segredo errado: para na 2ª tentativa.
+// 4. `unauthorized` persistente é segredo errado: para na 3ª ocorrência.
 reset([
+	{ body: { ok: false, error: "unauthorized" } },
 	{ body: { ok: false, error: "unauthorized" } },
 	{ body: { ok: false, error: "unauthorized" } },
 	{ body: { ok: false, error: "unauthorized" } },
 ]);
 await rejectsWith(captureLead(payload), "store_unauthorized");
-assert.equal(hits, 2);
+assert.equal(hits, 3);
 
 // 5. Payload inválido é determinístico: nenhuma nova tentativa.
 reset([{ body: { ok: false, error: "invalid_payload" } }]);
@@ -158,7 +159,7 @@ await Bun.sleep(1200); // deixa a execução abortada terminar no simulador
 process.env.SHEETS_TIMEOUT_MS = "30000";
 reset([{ delayMs: 20000 }, { body: { ok: true, data: { version: 4 } } }]);
 const hedgeStarted = Date.now();
-const hedged = await callSheets<{ version: number }>("ping");
+const hedged = await callSheets<{ version: number }>("dashboard");
 const hedgeMs = Date.now() - hedgeStarted;
 assert.equal(hedged.version, 4);
 assert.equal(hits, 2);
@@ -171,6 +172,26 @@ assert.equal(inflight, 0, "tentativa perdedora precisa ser cancelada");
 reset([{ html: true }, { body: { ok: true, data: {} } }]);
 await rejectsWith(callSheets("adminAuth", {}), "store_error");
 assert.equal(hits, 1);
+
+// 8b. Ping (aquecimento) também vai numa tentativa só.
+reset([{ html: true }, { body: { ok: true, data: {} } }]);
+await rejectsWith(callSheets("ping"), "store_error");
+assert.equal(hits, 1);
+
+// 8c. Cold start real de 13:17 (produção): várias falhas seguidas. As
+// reposições continuam até o orçamento — um teto de 5 no total falhava aqui.
+process.env.SHEETS_TIMEOUT_MS = "400";
+reset([
+	{ html: true },
+	{ html: true },
+	{ html: true },
+	{ html: true },
+	{ html: true },
+	{ html: true },
+	captured(new Date().toISOString(), true),
+]);
+assert.equal((await captureLead(payload)).created, true);
+assert.equal(hits, 7);
 
 // 9. /api/inscricao na Vercel: responde assim que a planilha confirma; CRM e
 // webhook (1,5s cada no simulador) terminam depois, via waitUntil.
