@@ -19,6 +19,22 @@ import {
 
 export const prerender = false;
 
+// `waitUntil` do runtime da Vercel, pelo mesmo contrato que @vercel/functions
+// lê (Symbol.for("@vercel/request-context")), sem adicionar a dependência.
+// Mantém a função viva até a promessa terminar depois de a resposta sair.
+// Fora da Vercel não existe e devolve undefined.
+type VercelRequestContext = {
+	waitUntil?: (promise: Promise<unknown>) => void;
+};
+
+function vercelRequestContext(): VercelRequestContext | undefined {
+	const holder = Reflect.get(
+		globalThis,
+		Symbol.for("@vercel/request-context"),
+	) as { get?: () => VercelRequestContext | undefined } | undefined;
+	return holder?.get?.();
+}
+
 function json(data: unknown, status: number): Response {
 	return new Response(JSON.stringify(data), {
 		status,
@@ -144,7 +160,7 @@ export const POST: APIRoute = async ({ request }) => {
 		// a resposta (sendCapiEvent nunca lança; sem token vira no-op).
 		const { fbp, fbc } = extractFbCookies(request.headers.get("cookie"));
 		const origin = new URL(request.url).origin;
-		const [notification, crm] = await Promise.all([
+		const effects = Promise.all([
 			created
 				? notifyLeadOwner("lead_captured", lead)
 				: Promise.resolve({ status: "skipped" as const }),
@@ -171,7 +187,29 @@ export const POST: APIRoute = async ({ request }) => {
 						undefined,
 				},
 			}),
-		]);
+		]).then(([notification, crm, capi]) => {
+			// Rodando depois da resposta, falha só aparece no log. Sem PII: status
+			// e motivo técnico (http_4xx, AbortError).
+			if ([notification, crm, capi].some((r) => r.status === "failed")) {
+				console.error("[inscricao] side_effect_failed", {
+					notification: notification.status,
+					crm: crm.status,
+					crmReason: crm.reason ?? null,
+					capi: capi.status,
+					capiReason: capi.reason ?? null,
+				});
+			}
+			return { notification, crm };
+		});
+
+		// Aviso ao dono, CRM e Meta CAPI não fazem parte da prova de gravação e
+		// nenhum cliente lê o resultado deles. Na Vercel rodam depois da resposta
+		// (waitUntil), tirando o mais lento dos três (até 6s) do tempo até
+		// "Inscrição confirmada". Fora da Vercel, seguem dentro da requisição.
+		const vercel = vercelRequestContext();
+		const background = typeof vercel?.waitUntil === "function";
+		if (background) vercel?.waitUntil?.(effects);
+		const effectResults = background ? {} : await effects;
 
 		// `persisted: true` é o CONTRATO de durabilidade que o formulário lê para
 		// decidir se mostra "Inscrição confirmada". Só se chega aqui depois de
@@ -185,8 +223,7 @@ export const POST: APIRoute = async ({ request }) => {
 				persisted: true,
 				leadId: lead.id,
 				created,
-				notification,
-				crm,
+				...effectResults,
 			},
 			201,
 		);

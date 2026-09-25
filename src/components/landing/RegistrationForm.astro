@@ -424,6 +424,11 @@ const errorClass = "mesa-field-error mt-1 hidden text-sm text-error";
 			if (started) return;
 			started = true;
 			cro("form_start");
+			// A página de obrigado já fica no cache quando a inscrição confirmar.
+			const prefetch = document.createElement("link");
+			prefetch.rel = "prefetch";
+			prefetch.href = THANK_YOU_PATH;
+			document.head.append(prefetch);
 		});
 
 		// Acorda o Apps Script já no carregamento: o cold start (20–35s) corre

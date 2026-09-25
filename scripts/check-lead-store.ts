@@ -1,23 +1,47 @@
 // Web App simulado em localhost, sem I/O externo. Uso: bun scripts/check-lead-store.ts
 // Reproduz as falhas medidas no Apps Script real (404 no echo, `unauthorized`
 // com o segredo certo, execução pendurada) e prova que o cliente de
-// leads-store.ts se recupera sem perder a inscrição.
+// leads-store.ts se recupera sem perder a inscrição — e que /api/inscricao
+// responde sem esperar CRM/webhook/CAPI quando roda na Vercel.
 import assert from "node:assert/strict";
 import {
 	callSheets,
 	captureLead,
 	LeadStoreError,
 } from "../src/lib/server/leads-store";
+import { POST } from "../src/pages/api/inscricao";
+
+// Nenhum destino real: o Bun carrega .env.local sozinho, então tudo que
+// sairia para Meta, CRM ou webhook é apagado ou apontado para o simulador.
+for (const key of [
+	"META_CAPI_ACCESS_TOKEN",
+	"META_CAPI_TEST_EVENT_CODE",
+	"PUBLIC_FB_PIXEL_ID",
+	"NEONDASH_CRM_INBOUND_TOKEN",
+	"NEONDASH_CRM_INBOUND_URL",
+	"LEAD_NOTIFY_WEBHOOK_URL",
+	"LEAD_NOTIFY_WEBHOOK_SECRET",
+]) {
+	delete process.env[key];
+}
 
 type Step = { html?: boolean; delayMs?: number; body?: unknown };
 let steps: Step[] = [];
 let hits = 0;
 let inflight = 0;
 let maxInflight = 0;
+const sideEffects: string[] = [];
 
 const server = Bun.serve({
 	port: 0,
 	async fetch(req) {
+		// CRM e webhook simulados, lentos de propósito.
+		const path = new URL(req.url).pathname;
+		if (path === "/crm" || path === "/hook") {
+			await Bun.sleep(1500);
+			sideEffects.push(path);
+			return Response.json({ leadId: 1 });
+		}
 		hits++;
 		inflight++;
 		maxInflight = Math.max(maxInflight, inflight);
@@ -147,6 +171,50 @@ assert.equal(inflight, 0, "tentativa perdedora precisa ser cancelada");
 reset([{ html: true }, { body: { ok: true, data: {} } }]);
 await rejectsWith(callSheets("adminAuth", {}), "store_error");
 assert.equal(hits, 1);
+
+// 9. /api/inscricao na Vercel: responde assim que a planilha confirma; CRM e
+// webhook (1,5s cada no simulador) terminam depois, via waitUntil.
+process.env.NEONDASH_CRM_INBOUND_TOKEN = "token-sintetico";
+process.env.NEONDASH_CRM_INBOUND_URL = `http://localhost:${server.port}/crm`;
+process.env.LEAD_NOTIFY_WEBHOOK_URL = `http://localhost:${server.port}/hook`;
+const vercelContext = Symbol.for("@vercel/request-context");
+const background: Promise<unknown>[] = [];
+Reflect.set(globalThis, vercelContext, {
+	get: () => ({ waitUntil: (p: Promise<unknown>) => background.push(p) }),
+});
+const post = () =>
+	POST({
+		request: new Request("http://localhost/api/inscricao", {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify(payload),
+		}),
+	} as Parameters<typeof POST>[0]);
+
+reset([captured(new Date().toISOString(), true)]);
+sideEffects.length = 0;
+let postStarted = Date.now();
+const fast = await post();
+const fastMs = Date.now() - postStarted;
+const fastBody = (await fast.json()) as Record<string, unknown>;
+assert.equal(fast.status, 201);
+assert.equal(fastBody.persisted, true);
+assert.ok(fastMs < 1000, `resposta esperou efeitos: ${fastMs}ms`);
+assert.equal(background.length, 1);
+assert.equal(sideEffects.length, 0, "efeitos ainda não terminaram");
+await background[0];
+assert.deepEqual(sideEffects.sort(), ["/crm", "/hook"]);
+
+// Fora da Vercel (sem contexto), os efeitos seguem dentro da requisição.
+Reflect.deleteProperty(globalThis, vercelContext);
+reset([captured(new Date().toISOString(), true)]);
+sideEffects.length = 0;
+postStarted = Date.now();
+const inline = await post();
+assert.equal(inline.status, 201);
+assert.ok(Date.now() - postStarted >= 1400, "sem Vercel deve aguardar");
+assert.equal(sideEffects.length, 2);
+assert.ok("crm" in ((await inline.json()) as Record<string, unknown>));
 
 // Cada falha deixa um log técnico, sem PII.
 assert.ok(
